@@ -185,7 +185,6 @@ function fillcolor!{T}(buffer::AbstractArray{T, 4}, imgsrc, nc)
     end
 end
 
-
 ## OSX Framework Wrappers ######################################################
 
 const foundation = Libdl.find_library(["/System/Library/Frameworks/Foundation.framework/Resources/BridgeSupport/Foundation"])
