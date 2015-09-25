@@ -10,6 +10,7 @@ notifications:
 # uncomment the following lines to override the default test script
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia -e 'Pkg.clone("https://github.com/JuliaIO/FileIO.jl.git")'
   - julia -e 'Pkg.clone(pwd()); Pkg.checkout("Images", "sd/fileio"); Pkg.build("OSXNativeIO");'
   - julia -e 'Pkg.test("OSXNativeIO"; coverage=true)'
 after_success:
