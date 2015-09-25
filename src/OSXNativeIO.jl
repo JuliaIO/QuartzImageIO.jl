@@ -1,21 +1,37 @@
 VERSION >= v"0.4.0-dev+6521" && __precompile__(true)
 module OSXNativeIO
-
 #import Base: error, size
 using Images, Colors, ColorVectorSpace, FixedPointNumbers, Compat
+import FileIO: @format_str, File, Stream, filename, stream
 
-export imread
 
-imread(io::IOStream) = imread(readbytes(io))
 
-function imread(b::Array{UInt8,1})
+image_formats = [
+    format"BMP",
+    format"GIF",
+    format"JPEG",
+    format"PNG",
+    format"TIFF",
+    format"TGA",
+]
+
+for format in image_formats
+    eval(quote
+        load(image::File{$format}, args...; key_args...) = load_(filename(image), args...; key_args...)
+        load(io::Stream{$format}, args...; key_args...) = load_(readbytes(io), args...; key_args...)
+    end)
+end
+
+
+
+function load_(b::Array{UInt8,1})
   data = CFDataCreate(b)
   imgsrc = CGImageSourceCreateWithData(data)
   CFRelease(data)
   read_and_release_imgsrc(imgsrc)
 end
 
-function imread(filename)
+function load_(filename)
     myURL = CFURLCreateWithFileSystemPath(abspath(filename))
     imgsrc = CGImageSourceCreateWithURL(myURL)
     CFRelease(myURL)

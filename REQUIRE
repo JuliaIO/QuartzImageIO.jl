@@ -4,3 +4,4 @@ Colors
 ColorVectorSpace
 FixedPointNumbers
 Compat
+FileIO
