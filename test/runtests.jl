@@ -1,7 +1,7 @@
 using FactCheck, FileIO, Images
 
 facts("OS X reader") do
-	imagedir = Pkg.dir("OSXNativeIO", "test", "images")
+    imagedir = Pkg.dir("QuartzImageIO", "test", "images")
     images = readdir(imagedir)
     for image in images
     	context(image) do

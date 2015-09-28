@@ -1,5 +1,5 @@
 VERSION >= v"0.4.0-dev+6521" && __precompile__(true)
-module OSXNativeIO
+module QuartzImageIO
 #import Base: error, size
 using Images, Colors, ColorVectorSpace, FixedPointNumbers, Compat
 import FileIO: @format_str, File, Stream, filename, stream
