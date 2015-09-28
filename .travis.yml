@@ -11,7 +11,7 @@ notifications:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.clone("https://github.com/JuliaIO/FileIO.jl.git")'
-  - julia -e 'Pkg.clone(pwd()); Pkg.checkout("Images", "sd/fileio"); Pkg.build("OSXNativeIO");'
-  - julia -e 'Pkg.test("OSXNativeIO"; coverage=true)'
+  - julia -e 'Pkg.clone(pwd()); Pkg.checkout("Images", "sd/fileio"); Pkg.build("QuartzNativeIO");'
+  - julia -e 'Pkg.test("QuartzNativeIO"; coverage=true)'
 after_success:
-  - julia -e 'cd(Pkg.dir("OSXNativeIO")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+  - julia -e 'cd(Pkg.dir("QuartzNativeIO")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
