@@ -10,8 +10,8 @@ notifications:
 # uncomment the following lines to override the default test script
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'Pkg.clone("https://github.com/JuliaIO/FileIO.jl.git")'
-  - julia -e 'Pkg.clone(pwd()); Pkg.checkout("Images", "sd/fileio"); Pkg.build("QuartzImageIO");'
+  - julia -e 'Pkg.clone("Images"); Pkg.checkout("FileIO")'
+  - julia -e 'Pkg.clone(pwd()); Pkg.build("QuartzImageIO");'
   - julia -e 'Pkg.test("QuartzImageIO"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("QuartzImageIO")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
