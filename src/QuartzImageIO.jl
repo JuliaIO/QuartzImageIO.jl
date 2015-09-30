@@ -24,7 +24,7 @@ end
 
 
 
-function load_(b::Array{UInt8,1})
+function load_(b::Array{UInt8, 1})
   data = CFDataCreate(b)
   imgsrc = CGImageSourceCreateWithData(data)
   CFRelease(data)
@@ -43,7 +43,7 @@ function read_and_release_imgsrc(imgsrc)
     imgsrc == C_NULL && return nothing
 
     # Get image information
-    imframes = convert(Int,CGImageSourceGetCount(imgsrc))
+    imframes = convert(Int, CGImageSourceGetCount(imgsrc))
     if imframes == 0
         # Bail out to ImageMagick
         warn("OSX reader found no frames")
@@ -84,7 +84,7 @@ function read_and_release_imgsrc(imgsrc)
     CFRelease(dict)
 
     # Allocate the buffer and get the pixel data
-    sz = imframes > 1 ? (convert(Int,imwidth), convert(Int,imheight), convert(Int,imframes)) : (convert(Int,imwidth), convert(Int,imheight))
+    sz = imframes > 1 ? (convert(Int, imwidth), convert(Int, imheight), convert(Int, imframes)) : (convert(Int, imwidth), convert(Int, imheight))
     const ufixedtype = [10=>Ufixed10, 12=>Ufixed12, 14=>Ufixed14, 16=>Ufixed16]
     T = pixeldepth <= 8 ? Ufixed8 : ufixedtype[pixeldepth]
     if colormodel == "Gray" && alphacode == 0 && storagedepth == 1
@@ -138,7 +138,7 @@ function alpha_and_depth(imgsrc)
     # https://developer.apple.com/library/mac/documentation/graphicsimaging/reference/CGImage/Reference/reference.html#//apple_ref/doc/uid/TP30000956-CH3g-459700
     # Dividing bits per pixel by bits per component tells us how many
     # color + alpha slices we have in the file.
-    alphacode, convert(Int,div(bitsperpixel, bitspercomponent))
+    alphacode, convert(Int, div(bitsperpixel, bitspercomponent))
 end
 
 function fillgray!{T}(buffer::AbstractArray{T, 2}, imgsrc)
