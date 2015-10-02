@@ -82,6 +82,41 @@ facts("OS X reader") do
         @fact colordim(img) --> 0
         @fact eltype(img) --> RGB4{Ufixed8}
     end
+    context("MRI Stack") do
+        img = testimage("mri-stack")
+        @fact colorspace(img) --> "Gray"
+        @fact ndims(img) --> 3
+        @fact colordim(img) --> 0
+        @fact eltype(img) --> Gray{Ufixed8}
+    end
+    context("M51") do
+        img = testimage("m51")
+        @fact colorspace(img) --> "Gray"
+        @fact ndims(img) --> 2
+        @fact colordim(img) --> 0
+        @fact eltype(img) --> Gray{Ufixed16}
+    end
+    context("HeLa cells") do
+        img = testimage("hela-cells")
+        @fact colorspace(img) --> "RGB"
+        @fact ndims(img) --> 2
+        @fact colordim(img) --> 0
+        @fact eltype(img) --> RGB{Ufixed16}
+    end
+    context("Blobs GIF") do
+        img = testimage("blobs")
+        @fact colorspace(img) --> "RGB4"
+        @fact ndims(img) --> 2
+        @fact colordim(img) --> 0
+        @fact eltype(img) --> RGB4{Ufixed8}
+    end
+    context("Multichannel timeseries OME") do
+        img = testimage("multi-channel-time-series.ome")
+        @fact colorspace(img) --> "Gray"
+        @fact ndims(img) --> 3
+        @fact colordim(img) --> 0
+        @fact eltype(img) --> Gray{Ufixed8}
+    end
 end
 
 FactCheck.exitstatus()
