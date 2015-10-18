@@ -122,6 +122,7 @@ function read_and_release_imgsrc(imgsrc)
     if imframes > 1
         prop["timedim"] = ndims(buf)
     end
+    info("Returning an image using QuartzImageIO")
     Image(buf, prop)
 end
 
