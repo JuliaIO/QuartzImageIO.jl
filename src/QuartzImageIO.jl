@@ -1,7 +1,7 @@
-VERSION >= v"0.4.0-dev+6521" && __precompile__(true)
+__precompile__(true)
 module QuartzImageIO
 #import Base: error, size
-using Images, Colors, ColorVectorSpace, FixedPointNumbers, Compat
+using Images, Colors, ColorVectorSpace, FixedPointNumbers
 import FileIO: @format_str, File, Stream, filename, stream
 
 image_formats = [
@@ -82,8 +82,8 @@ function read_and_release_imgsrc(imgsrc)
 
     # Allocate the buffer and get the pixel data
     sz = imframes > 1 ? (convert(Int, imwidth), convert(Int, imheight), convert(Int, imframes)) : (convert(Int, imwidth), convert(Int, imheight))
-    const ufixedtype = [10=>Ufixed10, 12=>Ufixed12, 14=>Ufixed14, 16=>Ufixed16]
-    T = pixeldepth <= 8 ? Ufixed8 : ufixedtype[pixeldepth]
+    const ufixedtype = [10=>UFixed10, 12=>UFixed12, 14=>UFixed14, 16=>UFixed16]
+    T = pixeldepth <= 8 ? UFixed8 : ufixedtype[pixeldepth]
     if colormodel == "Gray" && alphacode == 0 && storagedepth == 1
         buf = Array(Gray{T}, sz)
         fillgray!(reinterpret(T, buf, tuple(sz...)), imgsrc)
@@ -113,7 +113,7 @@ function read_and_release_imgsrc(imgsrc)
     CFRelease(imgsrc)
 
     # Set the image properties
-    prop = @compat Dict(
+    prop = Dict(
         "spatialorder" => ["x", "y"],
         "pixelspacing" => [1, 1],
         "imagedescription" => imagedescription,
@@ -122,7 +122,6 @@ function read_and_release_imgsrc(imgsrc)
     if imframes > 1
         prop["timedim"] = ndims(buf)
     end
-    info("Returning an image using QuartzImageIO")
     Image(buf, prop)
 end
 
@@ -175,7 +174,7 @@ function fillgrayalpha!(buffer::AbstractArray{UInt8, 3}, imgsrc)
     CFRelease(imagepixels)
     CGImageRelease(CGimg)
 end
-fillgrayalpha!(buffer::AbstractArray{Ufixed8, 3}, imgsrc) = fillgrayalpha!(reinterpret(UInt8, buffer), imgsrc)
+fillgrayalpha!(buffer::AbstractArray{UFixed8, 3}, imgsrc) = fillgrayalpha!(reinterpret(UInt8, buffer), imgsrc)
 
 function fillcolor!{T}(buffer::AbstractArray{T, 3}, imgsrc, nc)
     imwidth, imheight = size(buffer, 2), size(buffer, 3)

@@ -3,21 +3,14 @@ language: julia
 os:
   - osx
 julia:
-  - 0.3
   - 0.4
-#  - nightly
+  - nightly
 notifications:
   email: false
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-# next line is needed until a new version of FileIO is tagged
-  - julia -e 'Pkg.add("FileIO"); Pkg.checkout("FileIO"); Pkg.build("FileIO")'
-# next line is needed until a new version of Images is tagged
-  - julia -e 'Pkg.add("Images"); Pkg.checkout("Images"); Pkg.build("Images")'
-# next line is needed until a new version of TestImages is tagged
-  - julia -e 'Pkg.add("TestImages"); Pkg.checkout("TestImages"); Pkg.build("TestImages")'
   - julia -e 'Pkg.clone(pwd()); Pkg.build("QuartzImageIO");'
   - julia -e 'Pkg.status(); readdir(Pkg.dir())'
   - julia -e 'Pkg.test("QuartzImageIO"; coverage=true)'
 after_success:
-  - julia -e 'cd(Pkg.dir("QuartzImageIO")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+  - julia -e 'cd(Pkg.dir("QuartzImageIO")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
