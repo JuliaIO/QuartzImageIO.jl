@@ -3,6 +3,7 @@ module QuartzImageIO
 #import Base: error, size
 using Images, Colors, ColorVectorSpace, FixedPointNumbers
 import FileIO: @format_str, File, Stream, filename, stream
+import FileIO
 
 image_formats = [
     format"BMP",
@@ -13,10 +14,33 @@ image_formats = [
     format"TGA",
 ]
 
+# There's a way to get the mapping through
+# UTTypeCreatePreferredIdentifierForTag, but a dict is less trouble for now
+const format_names = Dict(format"BMP" => "com.microsoft.bmp",
+                          format"GIF" => "com.compuserve.gif",
+                          format"JPEG" => "public.jpeg",
+                          format"PNG" => "public.png",
+                          format"TIFF" => "public.tiff",
+                          format"TGA" => "com.truevision.tga-image")
+
+function get_format_name(format) # helper
+    # This should be defined as `format_names[f]`, but for whatever reason,
+    # that does not find the key (although the hash function seems correctly
+    # defined for these objects). FIXME in FileIO
+    for (k, v) in format_names
+        if format == k return v end
+    end
+    error(KeyError(format))
+end
+
 for format in image_formats
     eval(quote
-        load(image::File{$format}, args...; key_args...) = load_(filename(image), args...; key_args...)
-        load(io::Stream{$format}, args...; key_args...) = load_(readbytes(io), args...; key_args...)
+        FileIO.load(image::File{$format}, args...; key_args...) = load_(filename(image), args...; key_args...)
+        FileIO.load(io::Stream{$format}, args...; key_args...) = load_(readbytes(io), args...; key_args...)
+        FileIO.save(fname::File{$format}, img::Image, args...; key_args...) =
+            save_(filename(fname), img, get_format_name($format), args...;
+                  key_args...)
+        # TODO: Should we define it for io::Stream?
     end)
 end
 
@@ -216,7 +240,7 @@ function save_and_release(cg_img::Ptr{Void}, fname, image_type::AbstractString)
     nothing
 end
 
-function save_(img::Image, fname, image_type)
+function save_(fname, img::Image, image_type)
     img2 = convert(Image{RGBA{UFixed8}}, img)
     buf = reinterpret(FixedPointNumbers.UInt8, Images.data(img2))
     nx, ny = size(img2)
@@ -491,6 +515,8 @@ CFDataGetBytePtr{T}(CFDataRef::Ptr{Void}, ::Type{T}) =
 
 CFDataCreate(bytes::Array{UInt8,1}) =
     ccall(:CFDataCreate,Ptr{Void},(Ptr{Void},Ptr{UInt8},Csize_t),C_NULL,bytes,length(bytes))
+
+### For output #################################################################
 
 CGImageDestinationCreateWithURL(url::Ptr{Void}, # CFURLRef
                                 filetype, # CFStringRef
