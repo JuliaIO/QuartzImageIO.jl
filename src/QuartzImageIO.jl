@@ -231,7 +231,8 @@ end
 
 ## Saving Images ###############################################################
 
-function save_and_release(cg_img::Ptr{Void}, fname, image_type::AbstractString)
+function save_and_release(cg_img::Ptr{Void}, # CGImageRef
+                          fname, image_type::AbstractString)
     out_url = CFURLCreateWithFileSystemPath(fname);
     @assert out_url != C_NULL
     out_dest = CGImageDestinationCreateWithURL(out_url, image_type, 1);
@@ -245,6 +246,11 @@ function save_and_release(cg_img::Ptr{Void}, fname, image_type::AbstractString)
     nothing
 end
 
+""" `save_(fname, img::Image, image_type)`
+
+- fname is the name of the file to save to
+- image_type should be one of Apple's image types (eg. "public.jpeg")
+"""
 function save_(fname, img::Image, image_type)
     # TODO:
     # - avoid this convert call where possible
