@@ -5,6 +5,11 @@ using Images, Colors, ColorVectorSpace, FixedPointNumbers
 import FileIO: @format_str, File, Stream, filename, stream
 import FileIO
 
+# We need to export writemime_, since that's how ImageMagick does it.
+# It feels wrong though, shouldn't writemime_ be forward-declared in FileIO?
+# - cstjean Nov'15
+export writemime_
+
 image_formats = [
     format"BMP",
     format"GIF",
@@ -26,7 +31,7 @@ const format_names = Dict(format"BMP" => "com.microsoft.bmp",
 function get_format_name(format) # helper
     # This should be defined as `format_names[f]`, but for whatever reason,
     # that does not find the key (although the hash function seems correctly
-    # defined for these objects). FIXME in FileIO
+    # defined for these objects). FIXME in FileIO - cstjean Nov'15
     for (k, v) in format_names
         if format == k return v end
     end
@@ -241,6 +246,10 @@ function save_and_release(cg_img::Ptr{Void}, fname, image_type::AbstractString)
 end
 
 function save_(fname, img::Image, image_type)
+    # TODO:
+    # - avoid this convert call where possible
+    # - support greyscale images
+    # - deal with spatialorder?
     img2 = convert(Image{RGBA{UFixed8}}, img)
     buf = reinterpret(FixedPointNumbers.UInt8, Images.data(img2))
     nx, ny = size(img2)
@@ -254,6 +263,20 @@ function save_(fname, img::Image, image_type)
     save_and_release(cgImage, fname, image_type)
 end
 
+function getblob(img::AbstractImage, format)
+    # In theory we could save the image directly to a buffer via
+    # CGImageDestinationCreateWithData - TODO. But I couldn't figure out how
+    # to get the length of the CFMutableData object. So I take the inefficient
+    # route of saving the image to a temporary file for now.
+    @assert format == "png" # others not supported for now
+    temp_file = "/tmp/QuartzImageIO_temp.png"
+    save(temp_file, img)
+    readbytes(open(temp_file))
+end
+
+function writemime_(io::IO, ::MIME"image/png", img::AbstractImage)
+    write(io, getblob(img, "png"))
+end
 
 ## OSX Framework Wrappers ######################################################
 
