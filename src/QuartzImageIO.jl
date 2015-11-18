@@ -204,7 +204,11 @@ end
 
 function save_and_release(cg_img::Ptr{Void}, fname, image_type::AbstractString)
     out_url = CFURLCreateWithFileSystemPath(fname);
+    @assert out_url != C_NULL
     out_dest = CGImageDestinationCreateWithURL(out_url, image_type, 1);
+    if out_dest == C_NULL
+        error("CGImageDestinationCreateWithURL call failed - potentially bad image_type")
+    end
     CGImageDestinationAddImage(out_dest, cg_img);
     CGImageDestinationFinalize(out_dest);
     CFRelease(out_dest)
@@ -219,7 +223,6 @@ function save_(img::Image, fname, image_type)
     colspace = CGColorSpaceCreateDeviceRGB()
     bmp_context = CGBitmapContextCreate(buf, nx, ny, 8, nx*4, colspace,
                                         kCGImageAlphaPremultipliedLast)
-                                        #kCGImageAlphaNoneSkipLast)
     CFRelease(colspace)
     cgImage = CGBitmapContextCreateImage(bmp_context)
     CFRelease(bmp_context)
