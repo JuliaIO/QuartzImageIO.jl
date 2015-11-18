@@ -82,7 +82,7 @@ function read_and_release_imgsrc(imgsrc)
 
     # Allocate the buffer and get the pixel data
     sz = imframes > 1 ? (convert(Int, imwidth), convert(Int, imheight), convert(Int, imframes)) : (convert(Int, imwidth), convert(Int, imheight))
-    const ufixedtype = [10=>UFixed10, 12=>UFixed12, 14=>UFixed14, 16=>UFixed16]
+    const ufixedtype = Dict(10=>UFixed10, 12=>UFixed12, 14=>UFixed14, 16=>UFixed16)
     T = pixeldepth <= 8 ? UFixed8 : ufixedtype[pixeldepth]
     if colormodel == "Gray" && alphacode == 0 && storagedepth == 1
         buf = Array(Gray{T}, sz)
