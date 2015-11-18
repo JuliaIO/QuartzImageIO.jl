@@ -451,4 +451,33 @@ CFDataGetBytePtr{T}(CFDataRef::Ptr{Void}, ::Type{T}) =
 CFDataCreate(bytes::Array{UInt8,1}) =
     ccall(:CFDataCreate,Ptr{Void},(Ptr{Void},Ptr{UInt8},Csize_t),C_NULL,bytes,length(bytes))
 
+CGImageDestinationCreateWithURL(url::Ptr{Void}, # CFURLRef
+                                filetype, # CFStringRef
+                                count,    # size_t
+                                options=C_NULL) = # CFDictionaryRef
+    # Returns CGImageDestinationRef
+    ccall((:CGImageDestinationCreateWithURL, imageio),
+          Ptr{Void},
+          (Ptr{Void}, Ptr{UInt8}, Csize_t, Ptr{Void}),
+          url, NSString(filetype), count, options)
+
+CGImageDestinationAddImage(dest, # CGImageDestinationRef
+                           image, # CGImageRef
+                           properties=C_NULL) = # CFDictionaryRef
+    # Returns NULL
+    ccall((:CGImageDestinationAddImage, imageio),
+          Ptr{Void},
+          (Ptr{Void}, Ptr{Void}, Ptr{Void}),
+          dest, image, properties)
+
+CGImageDestinationFinalize(dest) =  # CGImageDestinationRef
+    ccall((:CGImageDestinationFinalize, imageio),
+          Ptr{Void},
+          (Ptr{Void},),
+          dest)
+
+
+
+
+
 end # Module
