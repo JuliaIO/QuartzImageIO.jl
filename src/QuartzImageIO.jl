@@ -200,6 +200,33 @@ function fillcolor!{T}(buffer::AbstractArray{T, 4}, imgsrc, nc)
     end
 end
 
+## Saving Images ###############################################################
+
+function save_and_release(cg_img::Ptr{Void}, fname, image_type::AbstractString)
+    out_url = CFURLCreateWithFileSystemPath(fname);
+    out_dest = CGImageDestinationCreateWithURL(out_url, image_type, 1);
+    CGImageDestinationAddImage(out_dest, cg_img);
+    CGImageDestinationFinalize(out_dest);
+    CFRelease(out_dest)
+    CFRelease(out_url)
+    nothing
+end
+
+function save_(img::Image, fname, image_type)
+    img2 = convert(Images.Image{ColorTypes.RGBA}, img)
+    buf = reinterpret(FixedPointNumbers.UInt8, Images.data(img2))
+    nx, ny = size(img2)
+    colspace = CGColorSpaceCreateDeviceRGB()
+    bmp_context = CGBitmapContextCreate(buf, nx, ny, 8, nx*4, colspace,
+                                        kCGImageAlphaNoneSkipLast)
+    CFRelease(colspace)
+    cgImage = CGBitmapContextCreateImage(bmp_context)
+    CFRelease(bmp_context)
+    
+    save_and_release(cgImage, fname, image_type)
+end
+
+
 ## OSX Framework Wrappers ######################################################
 
 # Commented out functions remain here because they might be useful for future
@@ -225,6 +252,16 @@ const kCFNumberCFIndexType = 14
 const kCFNumberNSIntegerType = 15
 const kCFNumberCGFloatType = 16
 const kCFNumberMaxType = 16
+
+# enum defined at https://developer.apple.com/library/mac/documentation/GraphicsImaging/Reference/CGImage/index.html#//apple_ref/c/tdef/CGImageAlphaInfo
+const kCGImageAlphaNone = 0
+const kCGImageAlphaPremultipliedLast = 1
+const kCGImageAlphaPremultipliedFirst = 2
+const kCGImageAlphaLast = 3
+const kCGImageAlphaFirst = 4
+const kCGImageAlphaNoneSkipLast = 5
+const kCGImageAlphaNoneSkipFirst = 6
+const kCGImageAlphaOnly = 7
 
 # Objective-C and NS wrappers
 oms{T}(id, uid, ::Type{T}=Ptr{Void}) =
@@ -476,8 +513,24 @@ CGImageDestinationFinalize(dest) =  # CGImageDestinationRef
           (Ptr{Void},),
           dest)
 
+CGColorSpaceCreateDeviceRGB() =
+    ccall((:CGColorSpaceCreateDeviceRGB, imageio), Ptr{Void}, ())
 
+CGBitmapContextCreate(data, # void*
+                      width, height, # size_t
+                      bitsPerComponent, bytesPerRow, # size_t
+                      space, # CGColorSpaceRef
+                      bitmapInfo) = # uint32_t
+    # Returns CGContextRef
+    ccall((:CGBitmapContextCreate, imageio), Ptr{Void},
+          (Ptr{Void}, Csize_t, Csize_t, Csize_t, Csize_t,
+           Ptr{Void}, UInt32),
+          data, width, height, bitsPerComponent, bytesPerRow, space,
+          bitmapInfo)
 
+CGBitmapContextCreateImage(context_ref) = # CGContextRef
+    ccall((:CGBitmapContextCreateImage, imageio), Ptr{Void},
+          (Ptr{Void},), context_ref)
 
 
 end # Module
