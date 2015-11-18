@@ -213,12 +213,13 @@ function save_and_release(cg_img::Ptr{Void}, fname, image_type::AbstractString)
 end
 
 function save_(img::Image, fname, image_type)
-    img2 = convert(Images.Image{ColorTypes.RGBA}, img)
+    img2 = convert(Image{RGBA{UFixed8}}, img)
     buf = reinterpret(FixedPointNumbers.UInt8, Images.data(img2))
     nx, ny = size(img2)
     colspace = CGColorSpaceCreateDeviceRGB()
     bmp_context = CGBitmapContextCreate(buf, nx, ny, 8, nx*4, colspace,
-                                        kCGImageAlphaNoneSkipLast)
+                                        kCGImageAlphaPremultipliedLast)
+                                        #kCGImageAlphaNoneSkipLast)
     CFRelease(colspace)
     cgImage = CGBitmapContextCreateImage(bmp_context)
     CFRelease(bmp_context)
