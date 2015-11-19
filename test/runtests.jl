@@ -1,5 +1,12 @@
 using FactCheck, FileIO, QuartzImageIO, Images, Colors, FixedPointNumbers, TestImages
 
+# Saving notes:
+# autumn_leaves and toucan fail as of November 2015. The "edges" of the
+# leaves are visibly different after a save+load cycle. Not sure if the
+# reader or the writer is to blame. Probably an alpha channel issue.
+# Mri-stack and multichannel timeseries OME are both image stacks,
+# but the save code only saves the first frame at the moment.
+
 facts("FileIO default") do
     imagedir = Pkg.dir("QuartzImageIO", "test", "images")
     images = readdir(imagedir)
@@ -13,135 +20,177 @@ end
 
 facts("OS X reader") do
     context("Autumn leaves") do
-        img = testimage("autumn_leaves")
+        name = "autumn_leaves"
+        img = testimage(name)
         @fact colorspace(img) --> "RGBA"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> RGBA{UFixed16}
+        out_name = joinpath(tempdir(), name * ".png")
+        # Calling `save` relies on FileIO dispatching to us, so we
+        # make the call explicit.
+        QuartzImageIO.save_(out_name, img, "public.png")
+        # Ideally, the `convert` would not be necessary, but the
+        # saving step goes through a conversion, so we need to do it
+        # in this test
+        @pending load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("Camerman") do
-        img = testimage("cameraman")
+        name = "cameraman"
+        img = testimage(name)
         @fact colorspace(img) --> "Gray"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> Gray{UFixed8}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("Earth Apollo") do
-        img = testimage("earth_apollo17")
+        name = "earth_apollo17"
+        img = testimage(name)
         @fact colorspace(img) --> "RGB4"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> RGB4{UFixed8}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("Fabio") do
-    img = testimage("fabio")
+    name = "fabio"
+        img = testimage(name)
         @fact colorspace(img) --> "Gray"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> Gray{UFixed8}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("House") do
-        img = testimage("house")
+        name = "house"
+        img = testimage(name)
         @fact colorspace(img) --> "GrayA"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> GrayA{UFixed8}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("Jetplane") do
-        img = testimage("jetplane")
+        name = "jetplane"
+        img = testimage(name)
         @fact colorspace(img) --> "GrayA"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> GrayA{UFixed8}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("Lighthouse") do
-        img = testimage("lighthouse")
+        name = "lighthouse"
+        img = testimage(name)
         @fact colorspace(img) --> "RGB4"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> RGB4{UFixed8}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("Mandrill") do
-        img = testimage("mandrill")
+        name = "mandrill"
+        img = testimage(name)
         @fact colorspace(img) --> "RGB"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> RGB{UFixed8}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("Moonsurface") do
-        img = testimage("moonsurface")
+        name = "moonsurface"
+        img = testimage(name)
         @fact colorspace(img) --> "Gray"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> Gray{UFixed8}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("Mountainstream") do
-        img = testimage("mountainstream")
+        name = "mountainstream"
+        img = testimage(name)
         @fact colorspace(img) --> "RGB4"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> RGB4{UFixed8}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("MRI Stack") do
-        img = testimage("mri-stack")
+        name = "mri-stack"
+        img = testimage(name)
         @fact colorspace(img) --> "Gray"
         @fact ndims(img) --> 3
         @fact colordim(img) --> 0
         @fact eltype(img) --> Gray{UFixed8}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        # Stack saving isn't implemented yet
+        @pending load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("M51") do
-        img = testimage("m51")
+        name = "m51"
+        img = testimage(name)
         @fact colorspace(img) --> "Gray"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> Gray{UFixed16}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("HeLa cells") do
-        img = testimage("hela-cells")
+        name = "hela-cells"
+        img = testimage(name)
         @fact colorspace(img) --> "RGB"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> RGB{UFixed16}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("Blobs GIF") do
-        img = testimage("blobs")
+        name = "blobs"
+        img = testimage(name)
         @fact colorspace(img) --> "RGB4"
         @fact ndims(img) --> 2
         @fact colordim(img) --> 0
         @fact eltype(img) --> RGB4{UFixed8}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("Multichannel timeseries OME") do
-        img = testimage("multi-channel-time-series.ome")
+        name = "multi-channel-time-series.ome"
+        img = testimage(name)
         @fact colorspace(img) --> "Gray"
         @fact ndims(img) --> 3
         @fact colordim(img) --> 0
         @fact eltype(img) --> Gray{UFixed8}
+        out_name = joinpath(tempdir(), name * ".png")
+        QuartzImageIO.save_(out_name, img, "public.png")
+        # Stack saving isn't implemented yet
+        @pending load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
 end
-
-facts("OS X writer") do
-    # autumn_leaves and toucan fail as of November 2015. The "edges" of the
-    # leaves are visibly different after a save+load cycle. Not sure if the
-    # reader or the writer is to blame. Probably an alpha channel issue.
-    # For mri-stack, I don't know why it fails. Also note that it's a grayscale
-    # image that somehow doesn't show up in IJulia (it seems that writemime
-    # calls another function - maybe that's not this module's fault)
-    for img_name in readdir(TestImages.imagedir)
-        if !startswith(img_name, "peppers") # not supported yet by the reader
-            context("Saving $img_name (as png)") do
-                img = testimage(img_name)
-                fname = "/tmp/test.png" # lossless format
-                # Calling `save` relies on FileIO dispatching to us, so we 
-                # make the call explicit.
-                QuartzImageIO.save_(fname, img, "public.png")
-                # Ideally, the `convert` would not be necessary, but the
-                # saving step goes through a conversion, so we need to do it 
-                # in this test
-                @fact load(fname) --> convert(Image{RGBA{UFixed8}}, img)
-            end
-        end
-    end
-end
-
 
 FactCheck.exitstatus()
