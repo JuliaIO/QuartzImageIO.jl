@@ -4,6 +4,9 @@ module QuartzImageIO
 using Images, Colors, ColorVectorSpace, FixedPointNumbers
 import FileIO: @format_str, File, Stream, filename, stream
 
+# We need to export writemime_, since that's how ImageMagick does it.
+export writemime_
+
 image_formats = [
     format"BMP",
     format"GIF",
@@ -13,10 +16,27 @@ image_formats = [
     format"TGA",
 ]
 
+# There's a way to get the mapping through
+# UTTypeCreatePreferredIdentifierForTag, but a dict is less trouble for now
+const apple_format_names = Dict(format"BMP" => "com.microsoft.bmp",
+                                format"GIF" => "com.compuserve.gif",
+                                format"JPEG" => "public.jpeg",
+                                format"PNG" => "public.png",
+                                format"TIFF" => "public.tiff",
+                                format"TGA" => "com.truevision.tga-image")
+
+# The rehash! is necessary because of a precompilation issue
+function __init__() Base.rehash!(apple_format_names) end
+
+get_apple_format_name(format) = apple_format_names[format]
+
 for format in image_formats
     eval(quote
         load(image::File{$format}, args...; key_args...) = load_(filename(image), args...; key_args...)
         load(io::Stream{$format}, args...; key_args...) = load_(readbytes(io), args...; key_args...)
+        save(fname::File{$format}, img::Image, args...; key_args...) =
+            save_(filename(fname), img, get_apple_format_name($format), args...;
+                  key_args...)
     end)
 end
 
@@ -82,7 +102,7 @@ function read_and_release_imgsrc(imgsrc)
 
     # Allocate the buffer and get the pixel data
     sz = imframes > 1 ? (convert(Int, imwidth), convert(Int, imheight), convert(Int, imframes)) : (convert(Int, imwidth), convert(Int, imheight))
-    const ufixedtype = [10=>UFixed10, 12=>UFixed12, 14=>UFixed14, 16=>UFixed16]
+    const ufixedtype = Dict(10=>UFixed10, 12=>UFixed12, 14=>UFixed14, 16=>UFixed16)
     T = pixeldepth <= 8 ? UFixed8 : ufixedtype[pixeldepth]
     if colormodel == "Gray" && alphacode == 0 && storagedepth == 1
         buf = Array(Gray{T}, sz)
@@ -200,6 +220,57 @@ function fillcolor!{T}(buffer::AbstractArray{T, 4}, imgsrc, nc)
     end
 end
 
+## Saving Images ###############################################################
+
+function save_and_release(cg_img::Ptr{Void}, # CGImageRef
+                          fname, image_type::AbstractString)
+    out_url = CFURLCreateWithFileSystemPath(fname);
+    out_dest = CGImageDestinationCreateWithURL(out_url, image_type, 1);
+    CGImageDestinationAddImage(out_dest, cg_img);
+    CGImageDestinationFinalize(out_dest);
+    CFRelease(out_dest)
+    CFRelease(out_url)
+    nothing
+end
+
+""" `save_(fname, img::Image, image_type)`
+
+- fname is the name of the file to save to
+- image_type should be one of Apple's image types (eg. "public.jpeg")
+"""
+function save_(fname, img::Image, image_type)
+    # TODO:
+    # - avoid this convert call where possible
+    # - support writing greyscale images
+    # - spatialorder? It seems to work already, maybe because of convert.
+    img2 = convert(Image{RGBA{UFixed8}}, img)
+    buf = reinterpret(FixedPointNumbers.UInt8, Images.data(img2))
+    nx, ny = size(img2)
+    colspace = CGColorSpaceCreateDeviceRGB()
+    bmp_context = CGBitmapContextCreate(buf, nx, ny, 8, nx*4, colspace,
+                                        kCGImageAlphaPremultipliedLast)
+    CFRelease(colspace)
+    cgImage = CGBitmapContextCreateImage(bmp_context)
+    CFRelease(bmp_context)
+    
+    save_and_release(cgImage, fname, image_type)
+end
+
+function getblob(img::AbstractImage, format)
+    # In theory we could save the image directly to a buffer via
+    # CGImageDestinationCreateWithData - TODO. But I couldn't figure out how
+    # to get the length of the CFMutableData object. So I take the inefficient
+    # route of saving the image to a temporary file for now.
+    @assert format == "png" # others not supported for now
+    temp_file = "/tmp/QuartzImageIO_temp.png"
+    save_(temp_file, img, "public.png")
+    readbytes(open(temp_file))
+end
+
+function writemime_(io::IO, ::MIME"image/png", img::AbstractImage)
+    write(io, getblob(img, "png"))
+end
+
 ## OSX Framework Wrappers ######################################################
 
 # Commented out functions remain here because they might be useful for future
@@ -225,6 +296,16 @@ const kCFNumberCFIndexType = 14
 const kCFNumberNSIntegerType = 15
 const kCFNumberCGFloatType = 16
 const kCFNumberMaxType = 16
+
+# enum defined at https://developer.apple.com/library/mac/documentation/GraphicsImaging/Reference/CGImage/index.html#//apple_ref/c/tdef/CGImageAlphaInfo
+const kCGImageAlphaNone = 0
+const kCGImageAlphaPremultipliedLast = 1
+const kCGImageAlphaPremultipliedFirst = 2
+const kCGImageAlphaLast = 3
+const kCGImageAlphaFirst = 4
+const kCGImageAlphaNoneSkipLast = 5
+const kCGImageAlphaNoneSkipFirst = 6
+const kCGImageAlphaOnly = 7
 
 # Objective-C and NS wrappers
 oms{T}(id, uid, ::Type{T}=Ptr{Void}) =
@@ -450,5 +531,75 @@ CFDataGetBytePtr{T}(CFDataRef::Ptr{Void}, ::Type{T}) =
 
 CFDataCreate(bytes::Array{UInt8,1}) =
     ccall(:CFDataCreate,Ptr{Void},(Ptr{Void},Ptr{UInt8},Csize_t),C_NULL,bytes,length(bytes))
+
+### For output #################################################################
+
+""" `check_null(x)`
+
+Triggers an error if `x` is `NULL`, else returns `x` """
+function check_null(x)
+    # Poor-man's error handling. TODO: raise more specific exceptions.
+    if x == C_NULL
+        error("C call returned NULL")
+    else
+        x
+    end
+end
+
+function CGImageDestinationCreateWithURL(url::Ptr{Void}, # CFURLRef
+                                         filetype, # CFStringRef
+                                         count,    # size_t
+                                         options=C_NULL) # CFDictionaryRef
+    # Returns CGImageDestinationRef
+    check_null(ccall((:CGImageDestinationCreateWithURL, imageio),
+                     Ptr{Void},
+                     (Ptr{Void}, Ptr{UInt8}, Csize_t, Ptr{Void}),
+                     url, NSString(filetype), count, options))
+end
+
+
+function CGImageDestinationAddImage(dest, # CGImageDestinationRef
+                                    image, # CGImageRef
+                                    properties=C_NULL) # CFDictionaryRef
+    # Returns NULL.
+    # From the Apple docs: "The function logs an error if you add more images
+    # than what you specified when you created the image destination. "
+    # Maybe we should catch that somehow?
+    ccall((:CGImageDestinationAddImage, imageio),
+          Ptr{Void},
+          (Ptr{Void}, Ptr{Void}, Ptr{Void}),
+          dest, image, properties)
+end
+
+
+type WritingImageFailed <: Exception end
+function CGImageDestinationFinalize(dest)  # CGImageDestinationRef
+    rval = ccall((:CGImageDestinationFinalize, imageio),
+                 Bool, (Ptr{Void},), dest)
+    # See https://developer.apple.com/library/mac/documentation/GraphicsImaging/Reference/CGImageDestination/index.html#//apple_ref/c/func/CGImageDestinationFinalize
+    if !rval throw(WritingImageFailed()) end
+end
+
+CGColorSpaceCreateDeviceRGB() =
+    check_null(ccall((:CGColorSpaceCreateDeviceRGB, imageio), Ptr{Void}, ()))
+
+function CGBitmapContextCreate(data, # void*
+                               width, height, # size_t
+                               bitsPerComponent, bytesPerRow, # size_t
+                               space, # CGColorSpaceRef
+                               bitmapInfo) # uint32_t
+    # Returns CGContextRef
+    check_null(ccall((:CGBitmapContextCreate, imageio), Ptr{Void},
+                     (Ptr{Void}, Csize_t, Csize_t, Csize_t, Csize_t,
+                      Ptr{Void}, UInt32),
+                     data, width, height, bitsPerComponent, bytesPerRow, space,
+                     bitmapInfo))
+end
+
+function CGBitmapContextCreateImage(context_ref) # CGContextRef
+    check_null(ccall((:CGBitmapContextCreateImage, imageio), Ptr{Void},
+                     (Ptr{Void},), context_ref))
+end
+
 
 end # Module
