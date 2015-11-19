@@ -3,7 +3,6 @@ module QuartzImageIO
 #import Base: error, size
 using Images, Colors, ColorVectorSpace, FixedPointNumbers
 import FileIO: @format_str, File, Stream, filename, stream
-import FileIO
 
 # We need to export writemime_, since that's how ImageMagick does it.
 export writemime_
@@ -33,9 +32,9 @@ get_apple_format_name(format) = apple_format_names[format]
 
 for format in image_formats
     eval(quote
-        FileIO.load(image::File{$format}, args...; key_args...) = load_(filename(image), args...; key_args...)
-        FileIO.load(io::Stream{$format}, args...; key_args...) = load_(readbytes(io), args...; key_args...)
-        FileIO.save(fname::File{$format}, img::Image, args...; key_args...) =
+        load(image::File{$format}, args...; key_args...) = load_(filename(image), args...; key_args...)
+        load(io::Stream{$format}, args...; key_args...) = load_(readbytes(io), args...; key_args...)
+        save(fname::File{$format}, img::Image, args...; key_args...) =
             save_(filename(fname), img, get_apple_format_name($format), args...;
                   key_args...)
     end)
@@ -268,7 +267,7 @@ function getblob(img::AbstractImage, format)
     # route of saving the image to a temporary file for now.
     @assert format == "png" # others not supported for now
     temp_file = "/tmp/QuartzImageIO_temp.png"
-    save(temp_file, img)
+    save_(temp_file, img, "public.png")
     readbytes(open(temp_file))
 end
 
