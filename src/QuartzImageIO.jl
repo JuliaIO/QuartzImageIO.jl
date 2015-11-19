@@ -6,8 +6,6 @@ import FileIO: @format_str, File, Stream, filename, stream
 import FileIO
 
 # We need to export writemime_, since that's how ImageMagick does it.
-# It feels wrong though, shouldn't writemime_ be forward-declared in FileIO?
-# - cstjean Nov'15
 export writemime_
 
 image_formats = [
@@ -21,26 +19,25 @@ image_formats = [
 
 # There's a way to get the mapping through
 # UTTypeCreatePreferredIdentifierForTag, but a dict is less trouble for now
-const format_names = Dict(format"BMP" => "com.microsoft.bmp",
-                          format"GIF" => "com.compuserve.gif",
-                          format"JPEG" => "public.jpeg",
-                          format"PNG" => "public.png",
-                          format"TIFF" => "public.tiff",
-                          format"TGA" => "com.truevision.tga-image")
+const apple_format_names = Dict(format"BMP" => "com.microsoft.bmp",
+                                format"GIF" => "com.compuserve.gif",
+                                format"JPEG" => "public.jpeg",
+                                format"PNG" => "public.png",
+                                format"TIFF" => "public.tiff",
+                                format"TGA" => "com.truevision.tga-image")
 
 # The rehash! is necessary because of a precompilation issue
-function __init__() Base.rehash!(format_names) end
+function __init__() Base.rehash!(apple_format_names) end
 
-get_format_name(format) = format_names[format]
+get_apple_format_name(format) = apple_format_names[format]
 
 for format in image_formats
     eval(quote
         FileIO.load(image::File{$format}, args...; key_args...) = load_(filename(image), args...; key_args...)
         FileIO.load(io::Stream{$format}, args...; key_args...) = load_(readbytes(io), args...; key_args...)
         FileIO.save(fname::File{$format}, img::Image, args...; key_args...) =
-            save_(filename(fname), img, get_format_name($format), args...;
+            save_(filename(fname), img, get_apple_format_name($format), args...;
                   key_args...)
-        # TODO: Should we define it for io::Stream?
     end)
 end
 
