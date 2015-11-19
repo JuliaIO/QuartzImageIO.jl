@@ -225,11 +225,7 @@ end
 function save_and_release(cg_img::Ptr{Void}, # CGImageRef
                           fname, image_type::AbstractString)
     out_url = CFURLCreateWithFileSystemPath(fname);
-    @assert out_url != C_NULL
     out_dest = CGImageDestinationCreateWithURL(out_url, image_type, 1);
-    if out_dest == C_NULL
-        error("CGImageDestinationCreateWithURL call failed - potentially bad image_type")
-    end
     CGImageDestinationAddImage(out_dest, cg_img);
     CGImageDestinationFinalize(out_dest);
     CFRelease(out_dest)
@@ -538,49 +534,72 @@ CFDataCreate(bytes::Array{UInt8,1}) =
 
 ### For output #################################################################
 
-CGImageDestinationCreateWithURL(url::Ptr{Void}, # CFURLRef
-                                filetype, # CFStringRef
-                                count,    # size_t
-                                options=C_NULL) = # CFDictionaryRef
-    # Returns CGImageDestinationRef
-    ccall((:CGImageDestinationCreateWithURL, imageio),
-          Ptr{Void},
-          (Ptr{Void}, Ptr{UInt8}, Csize_t, Ptr{Void}),
-          url, NSString(filetype), count, options)
+""" `check_null(x)`
 
-CGImageDestinationAddImage(dest, # CGImageDestinationRef
-                           image, # CGImageRef
-                           properties=C_NULL) = # CFDictionaryRef
-    # Returns NULL
+Triggers an error if `x` is `NULL`, else returns `x` """
+function check_null(x)
+    # Poor-man's error handling. TODO: raise more specific exceptions.
+    if x == C_NULL
+        error("C call returned NULL")
+    else
+        x
+    end
+end
+
+function CGImageDestinationCreateWithURL(url::Ptr{Void}, # CFURLRef
+                                         filetype, # CFStringRef
+                                         count,    # size_t
+                                         options=C_NULL) # CFDictionaryRef
+    # Returns CGImageDestinationRef
+    check_null(ccall((:CGImageDestinationCreateWithURL, imageio),
+                     Ptr{Void},
+                     (Ptr{Void}, Ptr{UInt8}, Csize_t, Ptr{Void}),
+                     url, NSString(filetype), count, options))
+end
+
+
+function CGImageDestinationAddImage(dest, # CGImageDestinationRef
+                                    image, # CGImageRef
+                                    properties=C_NULL) # CFDictionaryRef
+    # Returns NULL.
+    # From the Apple docs: "The function logs an error if you add more images
+    # than what you specified when you created the image destination. "
+    # Maybe we should catch that somehow?
     ccall((:CGImageDestinationAddImage, imageio),
           Ptr{Void},
           (Ptr{Void}, Ptr{Void}, Ptr{Void}),
           dest, image, properties)
+end
 
-CGImageDestinationFinalize(dest) =  # CGImageDestinationRef
-    ccall((:CGImageDestinationFinalize, imageio),
-          Ptr{Void},
-          (Ptr{Void},),
-          dest)
+
+type WritingImageFailed <: Exception end
+function CGImageDestinationFinalize(dest)  # CGImageDestinationRef
+    rval = ccall((:CGImageDestinationFinalize, imageio),
+                 Bool, (Ptr{Void},), dest)
+    # See https://developer.apple.com/library/mac/documentation/GraphicsImaging/Reference/CGImageDestination/index.html#//apple_ref/c/func/CGImageDestinationFinalize
+    if !rval throw(WritingImageFailed()) end
+end
 
 CGColorSpaceCreateDeviceRGB() =
-    ccall((:CGColorSpaceCreateDeviceRGB, imageio), Ptr{Void}, ())
+    check_null(ccall((:CGColorSpaceCreateDeviceRGB, imageio), Ptr{Void}, ()))
 
-CGBitmapContextCreate(data, # void*
-                      width, height, # size_t
-                      bitsPerComponent, bytesPerRow, # size_t
-                      space, # CGColorSpaceRef
-                      bitmapInfo) = # uint32_t
+function CGBitmapContextCreate(data, # void*
+                               width, height, # size_t
+                               bitsPerComponent, bytesPerRow, # size_t
+                               space, # CGColorSpaceRef
+                               bitmapInfo) # uint32_t
     # Returns CGContextRef
-    ccall((:CGBitmapContextCreate, imageio), Ptr{Void},
-          (Ptr{Void}, Csize_t, Csize_t, Csize_t, Csize_t,
-           Ptr{Void}, UInt32),
-          data, width, height, bitsPerComponent, bytesPerRow, space,
-          bitmapInfo)
+    check_null(ccall((:CGBitmapContextCreate, imageio), Ptr{Void},
+                     (Ptr{Void}, Csize_t, Csize_t, Csize_t, Csize_t,
+                      Ptr{Void}, UInt32),
+                     data, width, height, bitsPerComponent, bytesPerRow, space,
+                     bitmapInfo))
+end
 
-CGBitmapContextCreateImage(context_ref) = # CGContextRef
-    ccall((:CGBitmapContextCreateImage, imageio), Ptr{Void},
-          (Ptr{Void},), context_ref)
+function CGBitmapContextCreateImage(context_ref) # CGContextRef
+    check_null(ccall((:CGBitmapContextCreateImage, imageio), Ptr{Void},
+                     (Ptr{Void},), context_ref))
+end
 
 
 end # Module
