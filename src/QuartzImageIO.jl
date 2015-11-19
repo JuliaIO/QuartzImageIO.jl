@@ -254,8 +254,8 @@ end
 function save_(fname, img::Image, image_type)
     # TODO:
     # - avoid this convert call where possible
-    # - support greyscale images
-    # - deal with spatialorder?
+    # - support writing greyscale images
+    # - spatialorder? It seems to work already, maybe because of convert.
     img2 = convert(Image{RGBA{UFixed8}}, img)
     buf = reinterpret(FixedPointNumbers.UInt8, Images.data(img2))
     nx, ny = size(img2)
