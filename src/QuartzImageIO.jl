@@ -28,15 +28,10 @@ const format_names = Dict(format"BMP" => "com.microsoft.bmp",
                           format"TIFF" => "public.tiff",
                           format"TGA" => "com.truevision.tga-image")
 
-function get_format_name(format) # helper
-    # This should be defined as `format_names[f]`, but for whatever reason,
-    # that does not find the key (although the hash function seems correctly
-    # defined for these objects). FIXME in FileIO - cstjean Nov'15
-    for (k, v) in format_names
-        if format == k return v end
-    end
-    error(KeyError(format))
-end
+# The rehash! is necessary because of a precompilation issue
+function __init__() Base.rehash!(format_names) end
+
+get_format_name(format) = format_names[format]
 
 for format in image_formats
     eval(quote
