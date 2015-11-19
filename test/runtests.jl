@@ -122,7 +122,7 @@ end
 facts("OS X writer") do
     # autumn_leaves and toucan fail as of November 2015. The "edges" of the
     # leaves are visibly different after a save+load cycle. Not sure if the
-    # reader or the writer is to blame.
+    # reader or the writer is to blame. Probably an alpha channel issue.
     # For mri-stack, I don't know why it fails. Also note that it's a grayscale
     # image that somehow doesn't show up in IJulia (it seems that writemime
     # calls another function - maybe that's not this package's fault)
@@ -132,7 +132,9 @@ facts("OS X writer") do
                 img = testimage(img_name)
                 fname = "/tmp/test.png" # lossless format
                 save(fname, img)
-                # Ideally, the `convert` would not be necessary, since this is 
+                # Ideally, the `convert` would not be necessary, but the
+                # saving step goes through a conversion, so we need to do it 
+                # in this test
                 @fact load(fname) --> convert(Image{RGBA{UFixed8}}, img)
             end
         end
