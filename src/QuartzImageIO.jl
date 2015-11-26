@@ -7,6 +7,14 @@ import FileIO: @format_str, File, Stream, filename, stream
 # We need to export writemime_, since that's how ImageMagick does it.
 export writemime_
 
+typealias CFURLRef Ptr{Void}
+typealias CFStringRef Ptr{UInt8}
+typealias CFDictionaryRef Ptr{Void}
+typealias CGImageDestinationRef Ptr{Void}
+typealias CGImageRef Ptr{Void}
+typealias CGColorSpaceRef Ptr{Void}
+typealias CGContextRef Ptr{Void}
+
 image_formats = [
     format"BMP",
     format"GIF",
@@ -546,59 +554,60 @@ function check_null(x)
     end
 end
 
-function CGImageDestinationCreateWithURL(url::Ptr{Void}, # CFURLRef
-                                         filetype, # CFStringRef
-                                         count,    # size_t
-                                         options=C_NULL) # CFDictionaryRef
-    # Returns CGImageDestinationRef
+function CGImageDestinationCreateWithURL(url::CFURLRef,
+                                         filetype::AbstractString,
+                                         count::Integer,
+                                         options::CFDictionaryRef=C_NULL)
     check_null(ccall((:CGImageDestinationCreateWithURL, imageio),
-                     Ptr{Void},
-                     (Ptr{Void}, Ptr{UInt8}, Csize_t, Ptr{Void}),
+                     CGImageDestinationRef,
+                     (CFURLRef, CFStringRef, Csize_t, CFDictionaryRef),
                      url, NSString(filetype), count, options))
 end
 
 
-function CGImageDestinationAddImage(dest, # CGImageDestinationRef
-                                    image, # CGImageRef
-                                    properties=C_NULL) # CFDictionaryRef
+function CGImageDestinationAddImage(dest::CGImageDestinationRef,
+                                    image::CGImageRef,
+                                    properties::CFDictionaryRef=C_NULL)
     # Returns NULL.
     # From the Apple docs: "The function logs an error if you add more images
     # than what you specified when you created the image destination. "
     # Maybe we should catch that somehow?
     ccall((:CGImageDestinationAddImage, imageio),
           Ptr{Void},
-          (Ptr{Void}, Ptr{Void}, Ptr{Void}),
+          (CGImageDestinationRef, CGImageRef, CFDictionaryRef),
           dest, image, properties)
 end
 
 
 type WritingImageFailed <: Exception end
-function CGImageDestinationFinalize(dest)  # CGImageDestinationRef
+function CGImageDestinationFinalize(dest::CGImageDestinationRef)
     rval = ccall((:CGImageDestinationFinalize, imageio),
-                 Bool, (Ptr{Void},), dest)
+                 Bool, (CGImageDestinationRef,), dest)
     # See https://developer.apple.com/library/mac/documentation/GraphicsImaging/Reference/CGImageDestination/index.html#//apple_ref/c/func/CGImageDestinationFinalize
     if !rval throw(WritingImageFailed()) end
 end
 
 CGColorSpaceCreateDeviceRGB() =
-    check_null(ccall((:CGColorSpaceCreateDeviceRGB, imageio), Ptr{Void}, ()))
+    check_null(ccall((:CGColorSpaceCreateDeviceRGB, imageio),
+                     CGColorSpaceRef, ()))
 
 function CGBitmapContextCreate(data, # void*
                                width, height, # size_t
                                bitsPerComponent, bytesPerRow, # size_t
-                               space, # CGColorSpaceRef
+                               space::CGColorSpaceRef,
                                bitmapInfo) # uint32_t
-    # Returns CGContextRef
-    check_null(ccall((:CGBitmapContextCreate, imageio), Ptr{Void},
+    check_null(ccall((:CGBitmapContextCreate, imageio),
+                     CGContextRef,
                      (Ptr{Void}, Csize_t, Csize_t, Csize_t, Csize_t,
-                      Ptr{Void}, UInt32),
+                      CGColorSpaceRef, UInt32),
                      data, width, height, bitsPerComponent, bytesPerRow, space,
                      bitmapInfo))
 end
 
-function CGBitmapContextCreateImage(context_ref) # CGContextRef
-    check_null(ccall((:CGBitmapContextCreateImage, imageio), Ptr{Void},
-                     (Ptr{Void},), context_ref))
+function CGBitmapContextCreateImage(context_ref::CGContextRef)
+    check_null(ccall((:CGBitmapContextCreateImage, imageio),
+                     CGImageRef,
+                     (CGContextRef,), context_ref))
 end
 
 
