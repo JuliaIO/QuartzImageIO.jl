@@ -193,4 +193,23 @@ facts("OS X reader") do
     end
 end
 
+facts("Streams") do
+    name = "lighthouse"
+    img = testimage(name)
+    out_name = joinpath(tempdir(), name * ".png")
+    context("saving") do
+        open(out_name, "w") do io
+            QuartzImageIO.save(Stream(format"PNG", io), img)
+        end
+        imgcmp = load(out_name)
+        @fact imgcmp --> img
+    end
+    context("loading") do
+        imgcmp = open(out_name) do io
+            QuartzImageIO.load(Stream(format"PNG", io))
+        end
+        @fact imgcmp --> img
+    end
+end
+
 FactCheck.exitstatus()

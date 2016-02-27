@@ -241,7 +241,7 @@ end
 - fname is the name of the file to save to
 - image_type should be one of Apple's image types (eg. "public.jpeg")
 """
-function save_(fname, img::Image, image_type)
+function save_(fname, img::AbstractImage, image_type)
     # TODO:
     # - avoid this convert call where possible
     # - support writing greyscale images
@@ -268,7 +268,7 @@ function getblob(img::AbstractImage, format)
     # CGImageDestinationCreateWithData - TODO. But I couldn't figure out how
     # to get the length of the CFMutableData object. So I take the inefficient
     # route of saving the image to a temporary file for now.
-    @assert format == "png" # others not supported for now
+    @assert format == "png" || format == "public.png" # others not supported for now
     temp_file = "/tmp/QuartzImageIO_temp.png"
     save_(temp_file, img, "public.png")
     readbytes(open(temp_file))
