@@ -37,6 +37,9 @@ for format in image_formats
         save(fname::File{$format}, img::Image, args...; key_args...) =
             save_(filename(fname), img, get_apple_format_name($format), args...;
                   key_args...)
+        save(io::Stream{$format}, img::Image, args...; key_args...) =
+            save_(stream(io), img, get_apple_format_name($format), args...;
+                  key_args...)
     end)
 end
 
@@ -252,8 +255,12 @@ function save_(fname, img::Image, image_type)
     CFRelease(colspace)
     cgImage = CGBitmapContextCreateImage(bmp_context)
     CFRelease(bmp_context)
-    
+
     save_and_release(cgImage, fname, image_type)
+end
+
+function save_(io::IO, img::AbstractImage, image_type)
+    write(io, getblob(img, image_type))
 end
 
 function getblob(img::AbstractImage, format)
@@ -267,9 +274,7 @@ function getblob(img::AbstractImage, format)
     readbytes(open(temp_file))
 end
 
-function writemime_(io::IO, ::MIME"image/png", img::AbstractImage)
-    write(io, getblob(img, "png"))
-end
+@deprecate writemime_(io::IO, ::MIME"image/png", img::AbstractImage) save(Stream(format"PNG", io), img)
 
 ## OSX Framework Wrappers ######################################################
 
