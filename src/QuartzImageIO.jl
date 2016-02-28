@@ -232,12 +232,13 @@ end
 
 function save_and_release(cg_img::Ptr{Void}, # CGImageRef
                           fname, image_type::AbstractString)
-    out_url = CFURLCreateWithFileSystemPath(fname);
-    out_dest = CGImageDestinationCreateWithURL(out_url, image_type, 1);
-    CGImageDestinationAddImage(out_dest, cg_img);
-    CGImageDestinationFinalize(out_dest);
+    out_url = CFURLCreateWithFileSystemPath(fname)
+    out_dest = CGImageDestinationCreateWithURL(out_url, image_type, 1)
+    CGImageDestinationAddImage(out_dest, cg_img)
+    CGImageDestinationFinalize(out_dest)
     CFRelease(out_dest)
     CFRelease(out_url)
+    CGImageRelease(cg_img)
     nothing
 end
 
