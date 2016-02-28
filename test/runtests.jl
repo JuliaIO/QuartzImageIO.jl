@@ -202,13 +202,13 @@ facts("Streams") do
             QuartzImageIO.save(Stream(format"PNG", io), img)
         end
         imgcmp = load(out_name)
-        @fact imgcmp --> img
+        @fact convert(Image{RGB4}, imgcmp) --> img
     end
     context("loading") do
         imgcmp = open(out_name) do io
             QuartzImageIO.load(Stream(format"PNG", io))
         end
-        @fact imgcmp --> img
+        @fact convert(Image{RGB4}, imgcmp) --> img
     end
 end
 
