@@ -136,6 +136,7 @@ function read_and_release_imgsrc(imgsrc)
     prop = Dict(
         "spatialorder" => ["x", "y"],
         "pixelspacing" => [1, 1],
+        "colorspace" => colormodel,
         "imagedescription" => imagedescription,
         "suppress" => Set(Any["imagedescription"])
     )

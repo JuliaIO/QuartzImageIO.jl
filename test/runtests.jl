@@ -58,7 +58,7 @@ facts("OS X reader") do
         @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
     end
     context("Fabio") do
-    name = "fabio"
+        name = "fabio"
         img = testimage(name)
         @fact colorspace(img) --> "Gray"
         @fact ndims(img) --> 2
