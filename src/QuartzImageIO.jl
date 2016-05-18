@@ -69,7 +69,10 @@ end
 
 ## core, internal function
 function read_and_release_imgsrc(imgsrc)
-    imgsrc == C_NULL && return nothing
+    if imgsrc == C_NULL
+        warn("OSX reader created no image source")
+        return nothing
+    end
     # Get image information
     imframes = convert(Int, CGImageSourceGetCount(imgsrc))
     if imframes == 0
@@ -334,7 +337,7 @@ selector(sel::AbstractString) = ccall(:sel_getUid, Ptr{Void}, (Ptr{UInt8}, ), se
 NSString(init::AbstractString) = ccall(:objc_msgSend, Ptr{Void},
                                (Ptr{Void}, Ptr{Void}, Ptr{UInt8}, UInt64),
                                oms(ogc("NSString"), "alloc"),
-                               selector("initWithCString:encoding:"), init, 1)
+                               selector("initWithCString:encoding:"), init, 4)
 
 # NSLog(str::AbstractString, obj) = ccall((:NSLog, foundation), Ptr{Void},
 #                                 (Ptr{Void}, Ptr{Void}), NSString(str), obj)
