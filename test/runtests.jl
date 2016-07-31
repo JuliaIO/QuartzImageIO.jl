@@ -8,7 +8,7 @@ using FactCheck, FileIO, QuartzImageIO, Images, Colors, FixedPointNumbers, TestI
 # but the save code only saves the first frame at the moment.
 
 facts("FileIO default") do
-    imagedir = Pkg.dir("QuartzImageIO", "test", "images")
+    imagedir = joinpath(dirname(@__FILE__), "images")
     images = readdir(imagedir)
     for image in images
     	context(image) do
