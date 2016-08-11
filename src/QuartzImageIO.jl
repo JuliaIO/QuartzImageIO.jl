@@ -1,7 +1,7 @@
 __precompile__(true)
 module QuartzImageIO
 #import Base: error, size
-using Images, Colors, ColorVectorSpace, FixedPointNumbers
+using Images, Colors, ColorVectorSpace, FixedPointNumbers, Compat
 import FileIO: @format_str, File, Stream, filename, stream
 
 # We need to export writemime_, since that's how ImageMagick does it.
@@ -41,7 +41,7 @@ get_apple_format_name(format) = apple_format_names[format]
 for format in image_formats
     eval(quote
         load(image::File{$format}, args...; key_args...) = load_(filename(image), args...; key_args...)
-        load(io::Stream{$format}, args...; key_args...) = load_(readbytes(io), args...; key_args...)
+        load(io::Stream{$format}, args...; key_args...) = load_(read(io), args...; key_args...)
         save(fname::File{$format}, img::Image, args...; key_args...) =
             save_(filename(fname), img, get_apple_format_name($format), args...;
                   key_args...)
@@ -178,7 +178,7 @@ function fillgray!{T}(buffer::AbstractArray{T, 2}, imgsrc)
     CGimg = CGImageSourceCreateImageAtIndex(imgsrc, 0)
     imagepixels = CopyImagePixels(CGimg)
     pixelptr = CFDataGetBytePtr(imagepixels, eltype(buffer))
-    imbuffer = pointer_to_array(pixelptr, (imwidth, imheight), false)
+    imbuffer = unsafe_wrap(Array, pixelptr, (imwidth, imheight), false)
     buffer[:, :] = imbuffer
     CFRelease(imagepixels)
     CGImageRelease(CGimg)
@@ -191,7 +191,7 @@ function fillgray!{T}(buffer::AbstractArray{T, 3}, imgsrc)
         CGimg = CGImageSourceCreateImageAtIndex(imgsrc, i - 1)
         imagepixels = CopyImagePixels(CGimg)
         pixelptr = CFDataGetBytePtr(imagepixels, T)
-        imbuffer = pointer_to_array(pixelptr, (imwidth, imheight), false)
+        imbuffer = unsafe_wrap(Array, pixelptr, (imwidth, imheight), false)
         buffer[:, :, i] = imbuffer
         CFRelease(imagepixels)
         CGImageRelease(CGimg)
@@ -203,7 +203,7 @@ function fillgrayalpha!(buffer::AbstractArray{UInt8, 3}, imgsrc)
     CGimg = CGImageSourceCreateImageAtIndex(imgsrc, 0)
     imagepixels = CopyImagePixels(CGimg)
     pixelptr = CFDataGetBytePtr(imagepixels, UInt16)
-    imbuffer = pointer_to_array(pixelptr, (imwidth, imheight), false)
+    imbuffer = unsafe_wrap(Array, pixelptr, (imwidth, imheight), false)
     buffer[1, :, :] = imbuffer & 0xff
     buffer[2, :, :] = div(imbuffer & 0xff00, 256)
     CFRelease(imagepixels)
@@ -216,7 +216,7 @@ function fillcolor!{T}(buffer::AbstractArray{T, 3}, imgsrc, nc)
     CGimg = CGImageSourceCreateImageAtIndex(imgsrc, 0)
     imagepixels = CopyImagePixels(CGimg)
     pixelptr = CFDataGetBytePtr(imagepixels, T)
-    imbuffer = pointer_to_array(pixelptr, (nc, imwidth, imheight), false)
+    imbuffer = unsafe_wrap(Array, pixelptr, (nc, imwidth, imheight), false)
     buffer[:, :, :] = imbuffer
     CFRelease(imagepixels)
     CGImageRelease(CGimg)
@@ -228,7 +228,7 @@ function fillcolor!{T}(buffer::AbstractArray{T, 4}, imgsrc, nc)
         CGimg = CGImageSourceCreateImageAtIndex(imgsrc, i - 1)
         imagepixels = CopyImagePixels(CGimg)
         pixelptr = CFDataGetBytePtr(imagepixels, T)
-        imbuffer = pointer_to_array(pixelptr, (nc, imwidth, imheight), false)
+        imbuffer = unsafe_wrap(Array, pixelptr, (nc, imwidth, imheight), false)
         buffer[:, :, :, i] = imbuffer
         CFRelease(imagepixels)
         CGImageRelease(CGimg)
@@ -284,7 +284,7 @@ function getblob(img::AbstractImage, format)
     @assert format == "png" || format == "public.png" # others not supported for now
     temp_file = "/tmp/QuartzImageIO_temp.png"
     save_(temp_file, img, "public.png")
-    readbytes(open(temp_file))
+    read(open(temp_file))
 end
 
 @deprecate writemime_(io::IO, ::MIME"image/png", img::AbstractImage) save(Stream(format"PNG", io), img)
@@ -442,7 +442,7 @@ function CFStringGetCString(CFStringRef::Ptr{Void})
     res = ccall(:CFStringGetCString, Bool, (Ptr{Void}, Ptr{UInt8}, UInt, UInt16),
                 CFStringRef, buffer, length(buffer), 0x0600)
     res == C_NULL && return ""
-    return bytestring(pointer(buffer))
+    return unsafe_string(pointer(buffer))
 end
 
 # These were unsafe, can return null pointers at random times.
