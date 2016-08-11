@@ -41,7 +41,7 @@ get_apple_format_name(format) = apple_format_names[format]
 for format in image_formats
     eval(quote
         load(image::File{$format}, args...; key_args...) = load_(filename(image), args...; key_args...)
-        load(io::Stream{$format}, args...; key_args...) = load_(readbytes(io), args...; key_args...)
+        load(io::Stream{$format}, args...; key_args...) = load_(read(io), args...; key_args...)
         save(fname::File{$format}, img::Image, args...; key_args...) =
             save_(filename(fname), img, get_apple_format_name($format), args...;
                   key_args...)
@@ -284,7 +284,7 @@ function getblob(img::AbstractImage, format)
     @assert format == "png" || format == "public.png" # others not supported for now
     temp_file = "/tmp/QuartzImageIO_temp.png"
     save_(temp_file, img, "public.png")
-    readbytes(open(temp_file))
+    read(open(temp_file))
 end
 
 @deprecate writemime_(io::IO, ::MIME"image/png", img::AbstractImage) save(Stream(format"PNG", io), img)
