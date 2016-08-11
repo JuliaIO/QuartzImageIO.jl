@@ -1,7 +1,7 @@
 __precompile__(true)
 module QuartzImageIO
 #import Base: error, size
-using Images, Colors, ColorVectorSpace, FixedPointNumbers
+using Images, Colors, ColorVectorSpace, FixedPointNumbers, Compat
 import FileIO: @format_str, File, Stream, filename, stream
 
 # We need to export writemime_, since that's how ImageMagick does it.
