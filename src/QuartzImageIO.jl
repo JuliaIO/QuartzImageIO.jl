@@ -178,7 +178,7 @@ function fillgray!{T}(buffer::AbstractArray{T, 2}, imgsrc)
     CGimg = CGImageSourceCreateImageAtIndex(imgsrc, 0)
     imagepixels = CopyImagePixels(CGimg)
     pixelptr = CFDataGetBytePtr(imagepixels, eltype(buffer))
-    imbuffer = pointer_to_array(pixelptr, (imwidth, imheight), false)
+    imbuffer = unsafe_wrap(Array, pixelptr, (imwidth, imheight), false)
     buffer[:, :] = imbuffer
     CFRelease(imagepixels)
     CGImageRelease(CGimg)
@@ -191,7 +191,7 @@ function fillgray!{T}(buffer::AbstractArray{T, 3}, imgsrc)
         CGimg = CGImageSourceCreateImageAtIndex(imgsrc, i - 1)
         imagepixels = CopyImagePixels(CGimg)
         pixelptr = CFDataGetBytePtr(imagepixels, T)
-        imbuffer = pointer_to_array(pixelptr, (imwidth, imheight), false)
+        imbuffer = unsafe_wrap(Array, pixelptr, (imwidth, imheight), false)
         buffer[:, :, i] = imbuffer
         CFRelease(imagepixels)
         CGImageRelease(CGimg)
@@ -203,7 +203,7 @@ function fillgrayalpha!(buffer::AbstractArray{UInt8, 3}, imgsrc)
     CGimg = CGImageSourceCreateImageAtIndex(imgsrc, 0)
     imagepixels = CopyImagePixels(CGimg)
     pixelptr = CFDataGetBytePtr(imagepixels, UInt16)
-    imbuffer = pointer_to_array(pixelptr, (imwidth, imheight), false)
+    imbuffer = unsafe_wrap(Array, pixelptr, (imwidth, imheight), false)
     buffer[1, :, :] = imbuffer & 0xff
     buffer[2, :, :] = div(imbuffer & 0xff00, 256)
     CFRelease(imagepixels)
@@ -216,7 +216,7 @@ function fillcolor!{T}(buffer::AbstractArray{T, 3}, imgsrc, nc)
     CGimg = CGImageSourceCreateImageAtIndex(imgsrc, 0)
     imagepixels = CopyImagePixels(CGimg)
     pixelptr = CFDataGetBytePtr(imagepixels, T)
-    imbuffer = pointer_to_array(pixelptr, (nc, imwidth, imheight), false)
+    imbuffer = unsafe_wrap(Array, pixelptr, (nc, imwidth, imheight), false)
     buffer[:, :, :] = imbuffer
     CFRelease(imagepixels)
     CGImageRelease(CGimg)
@@ -228,7 +228,7 @@ function fillcolor!{T}(buffer::AbstractArray{T, 4}, imgsrc, nc)
         CGimg = CGImageSourceCreateImageAtIndex(imgsrc, i - 1)
         imagepixels = CopyImagePixels(CGimg)
         pixelptr = CFDataGetBytePtr(imagepixels, T)
-        imbuffer = pointer_to_array(pixelptr, (nc, imwidth, imheight), false)
+        imbuffer = unsafe_wrap(Array, pixelptr, (nc, imwidth, imheight), false)
         buffer[:, :, :, i] = imbuffer
         CFRelease(imagepixels)
         CGImageRelease(CGimg)
@@ -442,7 +442,7 @@ function CFStringGetCString(CFStringRef::Ptr{Void})
     res = ccall(:CFStringGetCString, Bool, (Ptr{Void}, Ptr{UInt8}, UInt, UInt16),
                 CFStringRef, buffer, length(buffer), 0x0600)
     res == C_NULL && return ""
-    return bytestring(pointer(buffer))
+    return unsafe_string(pointer(buffer))
 end
 
 # These were unsafe, can return null pointers at random times.
