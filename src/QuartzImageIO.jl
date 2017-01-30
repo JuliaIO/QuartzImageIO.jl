@@ -42,10 +42,10 @@ for format in image_formats
     eval(quote
         load(image::File{$format}, args...; key_args...) = load_(filename(image), args...; key_args...)
         load(io::Stream{$format}, args...; key_args...) = load_(read(io), args...; key_args...)
-        save(fname::File{$format}, img::Image, args...; key_args...) =
+        save(fname::File{$format}, img, args...; key_args...) =
             save_(filename(fname), img, get_apple_format_name($format), args...;
                   key_args...)
-        save(io::Stream{$format}, img::Image, args...; key_args...) =
+        save(io::Stream{$format}, img, args...; key_args...) =
             save_(stream(io), img, get_apple_format_name($format), args...;
                   key_args...)
     end)
@@ -146,7 +146,7 @@ function read_and_release_imgsrc(imgsrc)
     end
     CFRelease(imgsrc)
 
-    # Set the image properties
+    # Set the image properties  TODO: does nothing at the moment, not attached to `buf`
     prop = Dict(
         "spatialorder" => ["x", "y"],
         "pixelspacing" => [1, 1],
@@ -157,7 +157,7 @@ function read_and_release_imgsrc(imgsrc)
     if imframes > 1
         prop["timedim"] = ndims(buf)
     end
-    Image(buf, prop)
+    buf
 end
 
 function alpha_and_depth(imgsrc)
@@ -254,16 +254,15 @@ end
 - fname is the name of the file to save to
 - image_type should be one of Apple's image types (eg. "public.jpeg")
 """
-function save_(fname, img::AbstractImage, image_type)
+function save_(fname, img::AbstractArray, image_type::String)
     # TODO:
     # - avoid this convert call where possible
     # - support writing greyscale images
     # - spatialorder? It seems to work already, maybe because of convert.
-    img2 = convert(Image{RGBA{UFixed8}}, img)
-    buf = reinterpret(FixedPointNumbers.UInt8, Images.data(img2))
-    nx, ny = size(img2)
+    buf = reinterpret.(channelview(img))
+    nx, ny = size(img)
     colspace = CGColorSpaceCreateDeviceRGB()
-    bmp_context = CGBitmapContextCreate(buf, nx, ny, 8, nx*4, colspace,
+    bmp_context = CGBitmapContextCreate(buf, nx, ny, 16, nx*8, colspace,
                                         kCGImageAlphaPremultipliedLast)
     CFRelease(colspace)
     cgImage = CGBitmapContextCreateImage(bmp_context)
@@ -272,11 +271,11 @@ function save_(fname, img::AbstractImage, image_type)
     save_and_release(cgImage, fname, image_type)
 end
 
-function save_(io::IO, img::AbstractImage, image_type)
+function save_(io::IO, img::AbstractArray, image_type::String)
     write(io, getblob(img, image_type))
 end
 
-function getblob(img::AbstractImage, format)
+function getblob(img::AbstractArray, format::String)
     # In theory we could save the image directly to a buffer via
     # CGImageDestinationCreateWithData - TODO. But I couldn't figure out how
     # to get the length of the CFMutableData object. So I take the inefficient
@@ -287,7 +286,7 @@ function getblob(img::AbstractImage, format)
     read(open(temp_file))
 end
 
-@deprecate writemime_(io::IO, ::MIME"image/png", img::AbstractImage) save(Stream(format"PNG", io), img)
+@deprecate writemime_(io::IO, ::MIME"image/png", img::AbstractArray) save(Stream(format"PNG", io), img)
 
 ## OSX Framework Wrappers ######################################################
 
