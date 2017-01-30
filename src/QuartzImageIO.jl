@@ -1,7 +1,7 @@
 __precompile__(true)
 module QuartzImageIO
 #import Base: error, size
-using Images, Colors, ColorVectorSpace, FixedPointNumbers, Compat
+using Images, ColorTypes, ColorVectorSpace, FixedPointNumbers, Compat
 import FileIO: @format_str, File, Stream, filename, stream
 
 # We need to export writemime_, since that's how ImageMagick does it.
@@ -21,7 +21,7 @@ image_formats = [
     format"JPEG",
     format"PNG",
     format"TIFF",
-    format"TGA",
+    format"TGA"
 ]
 
 # There's a way to get the mapping through
