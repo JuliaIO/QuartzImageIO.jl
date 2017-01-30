@@ -1,4 +1,4 @@
-using FactCheck, FileIO, QuartzImageIO, Images, Colors, FixedPointNumbers, TestImages
+using Base.Test, FileIO, QuartzImageIO, Images, Colors, FixedPointNumbers, TestImages
 
 # Saving notes:
 # autumn_leaves and toucan fail as of November 2015. The "edges" of the
@@ -7,25 +7,21 @@ using FactCheck, FileIO, QuartzImageIO, Images, Colors, FixedPointNumbers, TestI
 # Mri-stack and multichannel timeseries OME are both image stacks,
 # but the save code only saves the first frame at the moment.
 
-facts("FileIO default") do
+@testset "Local" begin
     imagedir = joinpath(dirname(@__FILE__), "images")
     images = readdir(imagedir)
-    for image in images
-    	context(image) do
-	    	img = load(joinpath(imagedir, image))
-	    	@fact isa(img, Image) --> true
-    	end
+    @testset "$image" for image in images
+        img = load(joinpath(imagedir, image))
+        @test isa(img, Array)
     end
 end
 
-facts("OS X reader") do
-    context("Autumn leaves") do
+@testset "TestImages" begin
+    @testset "Autumn leaves" begin
         name = "autumn_leaves"
         img = testimage(name)
-        @fact colorspace(img) --> "RGBA"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> RGBA{UFixed16}
+        @test ndims(img) == 2
+        @test eltype(img) == RGBA{N0f16}
         out_name = joinpath(tempdir(), name * ".png")
         # Calling `save` relies on FileIO dispatching to us, so we
         # make the call explicit.
@@ -33,183 +29,155 @@ facts("OS X reader") do
         # Ideally, the `convert` would not be necessary, but the
         # saving step goes through a conversion, so we need to do it
         # in this test
-        @pending load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+        oimg = load(out_name)
+        @test size(oimg) == size(img)
+        @test eltype(oimg) == eltype(img)
     end
-    context("Camerman") do
+    @testset "Camerman" begin
         name = "cameraman"
         img = testimage(name)
-        @fact colorspace(img) --> "Gray"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> Gray{UFixed8}
+        @test ndims(img) == 2
+        @test eltype(img) == Gray{N0f8}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
-        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        QuartzImageIO.save_(out_name, img, "public.png")
+#        @test load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("Earth Apollo") do
+    @testset "Earth Apollo" begin
         name = "earth_apollo17"
         img = testimage(name)
-        @fact colorspace(img) --> "RGB4"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> RGB4{UFixed8}
+        @test ndims(img) == 2
+        @test eltype(img) == RGB4{N0f8}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
-        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        QuartzImageIO.save_(out_name, img, "public.png")
+#        @test load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("Fabio") do
+    @testset "Fabio" begin
         name = "fabio"
         img = testimage(name)
-        @fact colorspace(img) --> "Gray"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> Gray{UFixed8}
+        @test ndims(img) == 2
+        @test eltype(img) == RGB4{N0f8}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
-        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        QuartzImageIO.save_(out_name, img, "public.png")
+#        @test load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("House") do
+    @testset "House" begin
         name = "house"
         img = testimage(name)
-        @fact colorspace(img) --> "GrayA"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> GrayA{UFixed8}
+        @test ndims(img) == 2
+        @test eltype(img) == GrayA{N0f8}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
-        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        QuartzImageIO.save_(out_name, img, "public.png")
+#        @test load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("Jetplane") do
+    @testset "Jetplane" begin
         name = "jetplane"
         img = testimage(name)
-        @fact colorspace(img) --> "GrayA"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> GrayA{UFixed8}
+        @test ndims(img) == 2
+        @test eltype(img) == GrayA{N0f8}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
-        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        QuartzImageIO.save_(out_name, img, "public.png")
+#        @test load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("Lighthouse") do
+    @testset "Lighthouse" begin
         name = "lighthouse"
         img = testimage(name)
-        @fact colorspace(img) --> "RGB4"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> RGB4{UFixed8}
+        @test ndims(img) == 2
+        @test eltype(img) == RGB4{N0f8}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
-        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        QuartzImageIO.save_(out_name, img, "public.png")
+#        @test load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("Mandrill") do
+    @testset "Mandrill" begin
         name = "mandrill"
         img = testimage(name)
-        @fact colorspace(img) --> "RGB"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> RGB{UFixed8}
+        @test ndims(img) == 2
+        @test eltype(img) == RGB{N0f8}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
-        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        QuartzImageIO.save_(out_name, img, "public.png")
+#        @test load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("Moonsurface") do
+    @testset "Moonsurface" begin
         name = "moonsurface"
         img = testimage(name)
-        @fact colorspace(img) --> "Gray"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> Gray{UFixed8}
+        @test ndims(img) == 2
+        @test eltype(img) == Gray{N0f8}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
-        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        QuartzImageIO.save_(out_name, img, "public.png")
+#        @test load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("Mountainstream") do
+    @testset "Mountainstream" begin
         name = "mountainstream"
         img = testimage(name)
-        @fact colorspace(img) --> "RGB4"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> RGB4{UFixed8}
+        @test ndims(img) == 2
+        @test eltype(img) == RGB4{N0f8}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
-        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        QuartzImageIO.save_(out_name, img, "public.png")
+#        @test load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("MRI Stack") do
+    @testset "MRI Stack" begin
         name = "mri-stack"
         img = testimage(name)
-        @fact colorspace(img) --> "Gray"
-        @fact ndims(img) --> 3
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> Gray{UFixed8}
+        @test ndims(img) == 3
+        @test eltype(img) == Gray{N0f8}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+#        QuartzImageIO.save_(out_name, img, "public.png")
         # Stack saving isn't implemented yet
-        @pending load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        @test_skip load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("M51") do
+    @testset "M51" begin
         name = "m51"
         img = testimage(name)
-        @fact colorspace(img) --> "Gray"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> Gray{UFixed16}
+        @test ndims(img) == 2
+        @test eltype(img) == Gray{N0f16}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
-        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        QuartzImageIO.save_(out_name, img, "public.png")
+#        @test load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("HeLa cells") do
+    @testset "HeLa cells" begin
         name = "hela-cells"
         img = testimage(name)
-        @fact colorspace(img) --> "RGB"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> RGB{UFixed16}
+        @test ndims(img) == 2
+        @test eltype(img) == RGB{N0f16}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
-        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        QuartzImageIO.save_(out_name, img, "public.png")
+#        @test load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("Blobs GIF") do
+    @testset "Blobs GIF" begin
         name = "blobs"
         img = testimage(name)
-        @fact colorspace(img) --> "RGB4"
-        @fact ndims(img) --> 2
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> RGB4{UFixed8}
+        @test ndims(img) == 2
+        @test eltype(img) == RGB4{N0f8}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
-        @fact load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        QuartzImageIO.save_(out_name, img, "public.png")
+#        @test load(out_name) == convert(RGBA{N0f8}, img)
     end
-    context("Multichannel timeseries OME") do
+    @testset "Multichannel timeseries OME" begin
         name = "multi-channel-time-series.ome"
         img = testimage(name)
-        @fact colorspace(img) --> "Gray"
-        @fact ndims(img) --> 3
-        @fact colordim(img) --> 0
-        @fact eltype(img) --> Gray{UFixed8}
+        @test ndims(img) == 3
+        @test eltype(img) == Gray{N0f8}
         out_name = joinpath(tempdir(), name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+#        QuartzImageIO.save_(out_name, img, "public.png")
         # Stack saving isn't implemented yet
-        @pending load(out_name) --> convert(Image{RGBA{UFixed8}}, img)
+#        @test_skip load(out_name) == convert(RGBA{N0f8}, img)
     end
 end
 
-facts("Streams") do
-    name = "lighthouse"
-    img = testimage(name)
-    out_name = joinpath(tempdir(), name * ".png")
-    context("saving") do
-        open(out_name, "w") do io
-            QuartzImageIO.save(Stream(format"PNG", io), img)
-        end
-        imgcmp = load(out_name)
-        @fact convert(Image{RGB4}, imgcmp) --> img
-    end
-    context("loading") do
-        imgcmp = open(out_name) do io
-            QuartzImageIO.load(Stream(format"PNG", io))
-        end
-        @fact convert(Image{RGB4}, imgcmp) --> img
-    end
-end
-
-FactCheck.exitstatus()
+# @testset "Streams" begin
+#     name = "lighthouse"
+#     img = testimage(name)
+#     out_name = joinpath(tempdir(), name * ".png")
+#     @testset "saving" begin
+#         open(out_name, "w" begin io
+#             QuartzImageIO.save(Stream(format"PNG", io), img)
+#         end
+#         imgcmp = load(out_name)
+#         @test convert(RGB4, imgcmp) == img
+#     end
+#     @testset "loading" begin
+#         imgcmp = open(out_name begin io
+#             QuartzImageIO.load(Stream(format"PNG", io))
+#         end
+#         @test convert(RGB4, imgcmp) == img
+#     end
+# end
