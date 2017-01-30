@@ -115,9 +115,11 @@ function read_and_release_imgsrc(imgsrc)
     CFRelease(dict)
 
     # Allocate the buffer and get the pixel data
-    sz = imframes > 1 ? (convert(Int, imwidth), convert(Int, imheight), convert(Int, imframes)) : (convert(Int, imwidth), convert(Int, imheight))
-    const ufixedtype = Dict(10=>UFixed10, 12=>UFixed12, 14=>UFixed14, 16=>UFixed16)
-    T = pixeldepth <= 8 ? UFixed8 : ufixedtype[pixeldepth]
+    sz = imframes > 1 ?
+        (convert(Int, imwidth), convert(Int, imheight), convert(Int, imframes)) :
+        (convert(Int, imwidth), convert(Int, imheight))
+    const ufixedtype = Dict(10=>N6f10, 12=>N4f12, 14=>N2f14, 16=>N0f16)
+    T = pixeldepth <= 8 ? N0f8 : ufixedtype[pixeldepth]
     if colormodel == "Gray" && alphacode == 0 && storagedepth == 1
         buf = Array(Gray{T}, sz)
         fillgray!(reinterpret(T, buf, tuple(sz...)), imgsrc)
@@ -209,7 +211,7 @@ function fillgrayalpha!(buffer::AbstractArray{UInt8, 3}, imgsrc)
     CFRelease(imagepixels)
     CGImageRelease(CGimg)
 end
-fillgrayalpha!(buffer::AbstractArray{UFixed8, 3}, imgsrc) = fillgrayalpha!(reinterpret(UInt8, buffer), imgsrc)
+fillgrayalpha!(buffer::AbstractArray{N0f8, 3}, imgsrc) = fillgrayalpha!(reinterpret(UInt8, buffer), imgsrc)
 
 function fillcolor!{T}(buffer::AbstractArray{T, 3}, imgsrc, nc)
     imwidth, imheight = size(buffer, 2), size(buffer, 3)
@@ -238,7 +240,7 @@ end
 ## Saving Images ###############################################################
 
 function save_and_release(cg_img::Ptr{Void}, # CGImageRef
-                          fname, image_type::AbstractString)
+                          fname, image_type::String)
     out_url = CFURLCreateWithFileSystemPath(fname)
     out_dest = CGImageDestinationCreateWithURL(out_url, image_type, 1)
     CGImageDestinationAddImage(out_dest, cg_img)
