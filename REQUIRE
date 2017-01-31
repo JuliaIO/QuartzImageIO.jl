@@ -1,7 +1,7 @@
-julia 0.4
+julia 0.5
 FileIO 0.0.4
-Images 0.5
-Colors
-ColorVectorSpace
-FixedPointNumbers 0.1
+Images 0.6
+Colors 0.7.0
+ColorVectorSpace 0.2
+FixedPointNumbers 0.3.0
 Compat 0.8.0
