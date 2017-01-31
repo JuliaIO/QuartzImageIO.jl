@@ -70,14 +70,14 @@ end
 ## core, internal function
 function read_and_release_imgsrc(imgsrc)
     if imgsrc == C_NULL
-        warn("OSX reader created no image source")
+        warn("QuartzImageIO created no image source")
         return nothing
     end
     # Get image information
     imframes = convert(Int, CGImageSourceGetCount(imgsrc))
     if imframes == 0
         # Bail out to ImageMagick
-        warn("OSX reader found no frames")
+        warn("QuartzImageIO found no frames")
         CFRelease(imgsrc)
         return nothing
     end
@@ -87,7 +87,7 @@ function read_and_release_imgsrc(imgsrc)
     isindexed = CFBooleanGetValue(CFDictionaryGetValue(dict, "IsIndexed"))
     if isindexed
         # Bail out to ImageMagick
-        warn("OSX reader: indexed color images not implemented")
+        warn("QuartzImageIO: indexed color images not implemented")
         CFRelease(imgsrc)
         return nothing
     end
@@ -98,7 +98,7 @@ function read_and_release_imgsrc(imgsrc)
     colormodel = CFStringGetCString(CFDictionaryGetValue(dict, "ColorModel"))
     if colormodel == ""
         # Bail out to ImageMagick
-        warn("OSX reader found empty colormodel string")
+        warn("QuartzImageIO found empty colormodel string")
         CFRelease(imgsrc)
         return nothing
     end
@@ -142,7 +142,7 @@ function read_and_release_imgsrc(imgsrc)
         buf = alphacode == 5 ? Array(RGB4{T}, sz) : Array(RGB1{T}, sz)
         fillcolor!(reinterpret(T, buf, tuple(4, sz...)), imgsrc, storagedepth)
     else
-        warn("Unknown colormodel ($colormodel) and alphacode ($alphacode) found by OSX reader")
+        warn("Unknown colormodel ($colormodel) and alphacode ($alphacode) found by QuartzImageIO")
         CFRelease(imgsrc)
         return nothing
     end
@@ -239,56 +239,154 @@ end
 
 ## Saving Images ###############################################################
 
-function save_and_release(cg_img::Ptr{Void}, # CGImageRef
-                          fname, image_type::String)
-    out_url = CFURLCreateWithFileSystemPath(fname)
-    out_dest = CGImageDestinationCreateWithURL(out_url, image_type, 1)
-    CGImageDestinationAddImage(out_dest, cg_img)
-    CGImageDestinationFinalize(out_dest)
-    CFRelease(out_dest)
-    CFRelease(out_url)
-    CGImageRelease(cg_img)
-    nothing
-end
-
 """ `save_(fname, img::Image, image_type)`
 
 - fname is the name of the file to save to
 - image_type should be one of Apple's image types (eg. "public.jpeg")
 """
-function save_(fname, img::AbstractArray, image_type::String)
-    # TODO:
-    # - avoid this convert call where possible
-    # - support writing greyscale images
-    # - spatialorder? It seems to work already, maybe because of convert.
-    buf = reinterpret.(channelview(img))
-    nx, ny = size(img)
-    colspace = CGColorSpaceCreateDeviceRGB()
-    bmp_context = CGBitmapContextCreate(buf, nx, ny, 16, nx*8, colspace,
-                                        kCGImageAlphaPremultipliedLast)
-    CFRelease(colspace)
-    cgImage = CGBitmapContextCreateImage(bmp_context)
+function save_(fname, img::AbstractArray, image_type::String, permute_horizontal=false; mapi = identity)
+    # Setup buffer
+    local imgm
+    try
+        imgm = map(x -> mapCG(mapi(x)), img)
+    catch
+        warn("""QuartzImageIO: Mapping to the storage type failed.
+                Perhaps your data had out-of-range values?
+                Try `map(clamp01nan, img)` to clamp values to a valid range.""")
+        rethrow()
+    end
+    permute_horizontal && (imgm = permutedims_horizontal(imgm))
+    ndims(imgm) > 3 && error("QuartzImageIO: at most 3 dimensions are supported")
+    buf = to_explicit(to_contiguous(imgm))
+    @show eltype(imgm)
+    # Color type and order
+    @show T = eltype(img)
+    bitmap_info = 0
+    if T <: Gray
+        bitmap_info |= kCGImageAlphaNone
+        colorspace = CGColorSpaceCreateWithName("kCGColorSpaceLinearGray")
+        components = 1
+    elseif T <: GrayA
+        bitmap_info |= kCGImageAlphaPremultipliedLast
+        colorspace = CGColorSpaceCreateWithName("kCGColorSpaceLinearGray")
+        components = 2
+    elseif T <: RGB
+        bitmap_info |= kCGImageAlphaNoneSkipLast
+        colorspace = CGColorSpaceCreateWithName("kCGColorSpaceSRGB")
+        components = 4
+    elseif T <: RGB4
+        bitmap_info |= kCGImageAlphaNoneSkipLast
+        colorspace = CGColorSpaceCreateWithName("kCGColorSpaceSRGB")
+        components = 4
+    elseif T <: RGBA
+        bitmap_info |= kCGImageAlphaPremultipliedLast
+        colorspace = CGColorSpaceCreateWithName("kCGColorSpaceSRGB")
+        components = 4
+    elseif T <: ARGB
+        bitmap_info |= kCGImageAlphaPremultipliedFirst
+        colorspace = CGColorSpaceCreateWithName("kCGColorSpaceSRGB")
+        components = 4
+    elseif T <: Union{BGRA, ABGR}
+        error("QuartzImageIO can only handle RBG byte orders")
+    else
+        error("QuartzImageIO: tried to save unknown buffer type $T")
+    end
+    # Image bit depth
+    @show S = eltype(buf)
+    if S <: Union{Int8, UInt8}
+        bits_per_component = 8
+        bitmap_info |= kCGBitmapByteOrderDefault
+    elseif S <: Union{Int16, UInt16}
+        bits_per_component = 16
+        bitmap_info |= kCGBitmapByteOrder16Little
+    elseif S <: Union{Int32, UInt32}
+        bits_per_component = 32
+        bitmap_info |= kCGBitmapByteOrder32Little
+    end
+    # Image size
+    width, height = size(imgm)
+    bytes_per_row = width*components*bits_per_component ÷ 8
+    # Ready to save
+    bmp_context = CGBitmapContextCreate(buf, width, height, bits_per_component,
+                                        bytes_per_row, colorspace, bitmap_info)
+    CFRelease(colorspace)
+    out_image = CGBitmapContextCreateImage(bmp_context)
     CFRelease(bmp_context)
-
-    save_and_release(cgImage, fname, image_type)
+    out_url = CFURLCreateWithFileSystemPath(fname)
+    out_dest = CGImageDestinationCreateWithURL(out_url, image_type, 1)
+    CGImageDestinationAddImage(out_dest, out_image)
+    CGImageDestinationFinalize(out_dest)
+    CFRelease(out_dest)
+    CFRelease(out_url)
+    CGImageRelease(out_image)
+    nothing
 end
 
-function save_(io::IO, img::AbstractArray, image_type::String)
-    write(io, getblob(img, image_type))
+function save_(io::IO, img::AbstractArray, image_type::String, permute_horizontal=false; mapi = clamp01nan)
+    write(io, getblob(img, image_type, permute_horizontal, mapi))
 end
 
-function getblob(img::AbstractArray, format::String)
+function getblob(img::AbstractArray, format::String, permute_horizontal; mapi = clamp01nan)
     # In theory we could save the image directly to a buffer via
     # CGImageDestinationCreateWithData - TODO. But I couldn't figure out how
     # to get the length of the CFMutableData object. So I take the inefficient
     # route of saving the image to a temporary file for now.
     @assert format == "png" || format == "public.png" # others not supported for now
     temp_file = "/tmp/QuartzImageIO_temp.png"
-    save_(temp_file, img, "public.png")
+    save_(temp_file, img, "public.png", permute_horizontal, mapi)
     read(open(temp_file))
 end
 
 @deprecate writemime_(io::IO, ::MIME"image/png", img::AbstractArray) save(Stream(format"PNG", io), img)
+
+# Element-mapping function. Converts to RGB/RGBA and uses
+# N0f8 "inner" element type.
+typealias Color1{T}            Color{T,1}
+typealias Color2{T,C<:Color1}  TransparentColor{C,T,2}
+typealias Color3{T}            Color{T,3}
+typealias Color4{T,C<:Color3}  TransparentColor{C,T,4}
+
+mapCG(c::Color1) = mapCG(convert(Gray, c))
+mapCG{T}(c::Gray{T}) = convert(Gray{N0f8}, c)
+mapCG{T<:Normed}(c::Gray{T}) = c
+
+mapCG(c::Color2) = mapCG(convert(GrayA, c))
+mapCG{T}(c::GrayA{T}) = convert(GrayA{N0f8}, c)
+mapCG{T<:Normed}(c::GrayA{T}) = c
+
+# Note: macOS does not handle 3 channel buffers, only 4,
+# but we can tell it to use or skip that 4th (alpha) channel
+mapCG(c::Color3) = mapCG(convert(RGBA, c))
+mapCG{T}(c::RGB{T}) = convert(RGBA{N0f8}, c)
+mapCG{T<:Normed}(c::RGB{T}) = convert(RGBA{N0f8}, c)
+
+mapCG(c::Color4) = mapCG(convert(RGBA, c))
+mapCG{T}(c::RGBA{T}) = convert(RGBA{N0f8}, c)
+mapCG{T<:Normed}(c::RGBA{T}) = c
+
+mapCG(x::UInt8) = reinterpret(N0f8, x)
+mapCG(x::Bool) = convert(N0f8, x)
+mapCG(x::AbstractFloat) = convert(N0f8, x)
+mapCG(x::Normed) = x
+
+# Make the data contiguous in memory, because writers don't handle stride.
+to_contiguous(A::Array) = A
+to_contiguous(A::AbstractArray) = copy(A)
+to_contiguous(A::SubArray) = copy(A)
+to_contiguous(A::BitArray) = convert(Array{N0f8}, A)
+to_contiguous(A::ColorView) = to_contiguous(channelview(A))
+
+to_explicit{C<:Colorant}(A::Array{C}) = to_explicit(channelview(A))
+to_explicit{T}(A::ChannelView{T}) = to_explicit(copy!(Array{T}(size(A)), A))
+to_explicit{T<:Normed}(A::Array{T}) = rawview(A)
+to_explicit{T<:AbstractFloat}(A::Array{T}) = to_explicit(convert(Array{N0f8}, A))
+
+permutedims_horizontal(img::AbstractVector) = img
+function permutedims_horizontal(img)
+    # Vertical-major is hard-coded here
+    p = [2; 1; 3:ndims(img)]
+    permutedims(img, p)
+end
 
 ## OSX Framework Wrappers ######################################################
 
@@ -317,14 +415,7 @@ const kCFNumberCGFloatType = 16
 const kCFNumberMaxType = 16
 
 # enum defined at https://developer.apple.com/library/mac/documentation/GraphicsImaging/Reference/CGImage/index.html#//apple_ref/c/tdef/CGImageAlphaInfo
-const kCGImageAlphaNone = 0
-const kCGImageAlphaPremultipliedLast = 1
-const kCGImageAlphaPremultipliedFirst = 2
-const kCGImageAlphaLast = 3
-const kCGImageAlphaFirst = 4
-const kCGImageAlphaNoneSkipLast = 5
-const kCGImageAlphaNoneSkipFirst = 6
-const kCGImageAlphaOnly = 7
+include("CG_enum.jl")
 
 # Objective-C and NS wrappers
 oms{T}(id, uid, ::Type{T}=Ptr{Void}) =
@@ -333,17 +424,17 @@ oms{T}(id, uid, ::Type{T}=Ptr{Void}) =
 ogc{T}(id, ::Type{T}=Ptr{Void}) =
     ccall((:objc_getClass, "Cocoa.framework/Cocoa"), Ptr{Void}, (Ptr{UInt8}, ), id)
 
-selector(sel::AbstractString) = ccall(:sel_getUid, Ptr{Void}, (Ptr{UInt8}, ), sel)
+selector(sel::String) = ccall(:sel_getUid, Ptr{Void}, (Ptr{UInt8}, ), sel)
 
-NSString(init::AbstractString) = ccall(:objc_msgSend, Ptr{Void},
+NSString(init::String) = ccall(:objc_msgSend, Ptr{Void},
                                (Ptr{Void}, Ptr{Void}, Ptr{UInt8}, UInt64),
                                oms(ogc("NSString"), "alloc"),
                                selector("initWithCString:encoding:"), init, 4)
 
-# NSLog(str::AbstractString, obj) = ccall((:NSLog, foundation), Ptr{Void},
+# NSLog(str::String, obj) = ccall((:NSLog, foundation), Ptr{Void},
 #                                 (Ptr{Void}, Ptr{Void}), NSString(str), obj)
 
-# NSLog(str::AbstractString) = ccall((:NSLog, foundation), Ptr{Void},
+# NSLog(str::String) = ccall((:NSLog, foundation), Ptr{Void},
 #                            (Ptr{Void}, ), NSString(str))
 
 # NSLog(obj::Ptr) = ccall((:NSLog, foundation), Ptr{Void}, (Ptr{Void}, ), obj)
@@ -382,7 +473,7 @@ CFShow(CFTypeRef::Ptr{Void}) = CFTypeRef != C_NULL &&
 #     ccall(:CFURLCreateWithString, Ptr{Void},
 #           (Ptr{Void}, Ptr{Void}, Ptr{Void}), C_NULL, NSString(filename), C_NULL)
 
-CFURLCreateWithFileSystemPath(filename::AbstractString) =
+CFURLCreateWithFileSystemPath(filename::String) =
     ccall(:CFURLCreateWithFileSystemPath, Ptr{Void},
           (Ptr{Void}, Ptr{Void}, Cint, Bool), C_NULL, NSString(filename), 0, false)
 
@@ -399,7 +490,7 @@ function CFDictionaryGetValue(CFDictionaryRef::Ptr{Void}, key)
           (Ptr{Void}, Ptr{Void}), CFDictionaryRef, key)
 end
 
-CFDictionaryGetValue(CFDictionaryRef::Ptr{Void}, key::AbstractString) =
+CFDictionaryGetValue(CFDictionaryRef::Ptr{Void}, key::String) =
     CFDictionaryGetValue(CFDictionaryRef::Ptr{Void}, NSString(key))
 
 # CFNumber
@@ -566,7 +657,7 @@ function check_null(x)
 end
 
 function CGImageDestinationCreateWithURL(url::CFURLRef,
-                                         filetype::AbstractString,
+                                         filetype::String,
                                          count::Integer,
                                          options::CFDictionaryRef=C_NULL)
     check_null(ccall((:CGImageDestinationCreateWithURL, imageio),
@@ -599,8 +690,19 @@ function CGImageDestinationFinalize(dest::CGImageDestinationRef)
 end
 
 CGColorSpaceCreateDeviceRGB() =
-    check_null(ccall((:CGColorSpaceCreateDeviceRGB, imageio),
-                     CGColorSpaceRef, ()))
+    check_null(ccall((:CGColorSpaceCreateDeviceRGB, imageio), CGColorSpaceRef, ()))
+
+# Valid colorspace names are (excluding deprecated values):
+# kCGColorSpaceGenericRGBLinear, kCGColorSpaceGenericCMYK, kCGColorSpaceGenericXYZ,
+# kCGColorSpaceGenericGrayGamma2_2, kCGColorSpaceExtendedGray, kCGColorSpaceLinearGray,
+# kCGColorSpaceExtendedLinearGray, kCGColorSpaceSRGB, kCGColorSpaceLinearSRGB,
+# kCGColorSpaceExtendedLinearSRGB, kCGColorSpaceDCIP3, kCGColorSpaceDisplayP3,
+# kCGColorSpaceAdobeRGB1998, kCGColorSpaceACESCGLinear, kCGColorSpaceITUR_709,
+# kCGColorSpaceITUR_2020, kCGColorSpaceROMMRGB
+CGColorSpaceCreateWithName(name::String) =
+    check_null(ccall((:CGColorSpaceCreateWithName, imageio), CGColorSpaceRef,
+                     (CFStringRef,), NSString(name)))
+
 
 function CGBitmapContextCreate(data, # void*
                                width, height, # size_t
