@@ -358,7 +358,7 @@ mapCG{T<:Normed}(c::GrayA{T}) = c
 # but we can tell it to use or skip that 4th (alpha) channel
 mapCG(c::Color3) = mapCG(convert(RGBA, c))
 mapCG{T}(c::RGB{T}) = convert(RGBA{N0f8}, c)
-mapCG{T<:Normed}(c::RGB{T}) = convert(RGBA{N0f8}, c)
+mapCG{T<:Normed}(c::RGB{T}) = convert(RGBA{T}, c)
 
 mapCG(c::Color4) = mapCG(convert(RGBA, c))
 mapCG{T}(c::RGBA{T}) = convert(RGBA{N0f8}, c)
