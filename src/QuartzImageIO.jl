@@ -106,6 +106,7 @@ function read_and_release_imgsrc(imgsrc)
     alphacode, storagedepth = alpha_and_depth(imgsrc)
 
     # Get image description string
+    # This is unused after the update to Images 0.6, but it would be nice to have again.
     imagedescription = ""
     if imtype == "public.tiff"
         tiffdict = CFDictionaryGetValue(dict, "{TIFF}")
@@ -147,18 +148,6 @@ function read_and_release_imgsrc(imgsrc)
         return nothing
     end
     CFRelease(imgsrc)
-
-    # Set the image properties  TODO: does nothing at the moment, not attached to `buf`
-    prop = Dict(
-        "spatialorder" => ["x", "y"],
-        "pixelspacing" => [1, 1],
-        "colorspace" => colormodel,
-        "imagedescription" => imagedescription,
-        "suppress" => Set(Any["imagedescription"])
-    )
-    if imframes > 1
-        prop["timedim"] = ndims(buf)
-    end
     buf
 end
 
