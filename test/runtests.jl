@@ -17,7 +17,7 @@ using Base.Test, FileIO, QuartzImageIO, Images, Colors, FixedPointNumbers, TestI
 end
 
 mydir = tempdir() * "/QuartzImages"
-mkdir(mydir)
+ispath(mydir) || mkdir(mydir)
 
 @testset "TestImages" begin
     @testset "Autumn leaves" begin
@@ -114,7 +114,7 @@ mkdir(mydir)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         # RGB4 vs. RGB problem
-        @test_skip eltype(oimg) == eltype(img)
+        #@test_skip eltype(oimg) == eltype(img)
     end
     @testset "Moonsurface" begin
         name = "moonsurface"
