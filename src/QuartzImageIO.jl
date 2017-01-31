@@ -262,11 +262,7 @@ function save_(fname, img::AbstractArray, image_type::String, permute_horizontal
         bitmap_info |= kCGImageAlphaPremultipliedLast
         colorspace = CGColorSpaceCreateWithName("kCGColorSpaceLinearGray")
         components = 2
-    elseif T <: RGB
-        bitmap_info |= kCGImageAlphaNoneSkipLast
-        colorspace = CGColorSpaceCreateWithName("kCGColorSpaceSRGB")
-        components = 4
-    elseif T <: RGB4
+    elseif T <: Union{RGB, RGB4}
         bitmap_info |= kCGImageAlphaNoneSkipLast
         colorspace = CGColorSpaceCreateWithName("kCGColorSpaceSRGB")
         components = 4
