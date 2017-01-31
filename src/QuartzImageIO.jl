@@ -326,14 +326,14 @@ function save_(io::IO, img::AbstractArray, image_type::String, permute_horizonta
     write(io, getblob(img, image_type, permute_horizontal, mapi))
 end
 
-function getblob(img::AbstractArray, format::String, permute_horizontal; mapi = clamp01nan)
+function getblob(img::AbstractArray, format::String, permute_horizontal, mapi)
     # In theory we could save the image directly to a buffer via
     # CGImageDestinationCreateWithData - TODO. But I couldn't figure out how
     # to get the length of the CFMutableData object. So I take the inefficient
     # route of saving the image to a temporary file for now.
     @assert format == "png" || format == "public.png" # others not supported for now
     temp_file = "/tmp/QuartzImageIO_temp.png"
-    save_(temp_file, img, "public.png", permute_horizontal, mapi)
+    save_(temp_file, img, "public.png", permute_horizontal, mapi=mapi)
     read(open(temp_file))
 end
 

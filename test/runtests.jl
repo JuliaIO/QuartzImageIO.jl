@@ -193,23 +193,23 @@ mkdir(mydir)
     end
 end
 
-# @testset "Streams" begin
-#     name = "lighthouse"
-#     img = testimage(name)
-#     out_name = joinpath(mydir, name * ".png")
-#     @testset "saving" begin
-#         open(out_name, "w" begin io
-#             QuartzImageIO.save(Stream(format"PNG", io), img)
-#         end
-#         imgcmp = load(out_name)
-#         @test convert(RGB4, imgcmp) == img
-#     end
-#     @testset "loading" begin
-#         imgcmp = open(out_name begin io
-#             QuartzImageIO.load(Stream(format"PNG", io))
-#         end
-#         @test convert(RGB4, imgcmp) == img
-#     end
-# end
+@testset "Streams" begin
+    name = "lighthouse"
+    img = testimage(name)
+    out_name = joinpath(mydir, name * ".png")
+    @testset "saving" begin
+        open(out_name, "w") do io
+            QuartzImageIO.save(Stream(format"PNG", io), img)
+        end
+        imgcmp = load(out_name)
+        @test imgcmp == img
+    end
+    @testset "loading" begin
+        imgcmp = open(out_name) do io
+            QuartzImageIO.load(Stream(format"PNG", io))
+        end
+        @test imgcmp == img
+    end
+end
 
 rm(mydir, recursive=true)
