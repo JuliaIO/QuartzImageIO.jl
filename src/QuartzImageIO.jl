@@ -415,7 +415,7 @@ const kCFNumberCGFloatType = 16
 const kCFNumberMaxType = 16
 
 # enum defined at https://developer.apple.com/library/mac/documentation/GraphicsImaging/Reference/CGImage/index.html#//apple_ref/c/tdef/CGImageAlphaInfo
-include("CG_enum.jl")
+include("CG_const.jl")
 
 # Objective-C and NS wrappers
 oms{T}(id, uid, ::Type{T}=Ptr{Void}) =
