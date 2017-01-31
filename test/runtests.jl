@@ -17,11 +17,11 @@ using Base.Test, FileIO, QuartzImageIO, Images, Colors, FixedPointNumbers, TestI
 end
 
 mydir = tempdir() * "/QuartzImages"
-# mkdir(mydir)
+mkdir(mydir)
 
 @testset "TestImages" begin
     @testset "Autumn leaves" begin
-        @show name = "autumn_leaves"
+        name = "autumn_leaves"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGBA{N0f16}
@@ -39,7 +39,7 @@ mydir = tempdir() * "/QuartzImages"
         # @test oimg == img
     end
     @testset "Camerman" begin
-        @show name = "cameraman"
+        name = "cameraman"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == Gray{N0f8}
@@ -50,7 +50,7 @@ mydir = tempdir() * "/QuartzImages"
         @test eltype(oimg) == eltype(img)
     end
     @testset "Earth Apollo" begin
-        @show name = "earth_apollo17"
+        name = "earth_apollo17"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
@@ -61,7 +61,7 @@ mydir = tempdir() * "/QuartzImages"
         @test eltype(oimg) == eltype(img)
     end
     @testset "Fabio" begin
-        @show name = "fabio"
+        name = "fabio"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
@@ -72,7 +72,7 @@ mydir = tempdir() * "/QuartzImages"
         @test eltype(oimg) == eltype(img)
     end
     @testset "House" begin
-        @show name = "house"
+        name = "house"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == GrayA{N0f8}
@@ -83,7 +83,7 @@ mydir = tempdir() * "/QuartzImages"
         @test eltype(oimg) == eltype(img)
     end
     @testset "Jetplane" begin
-        @show name = "jetplane"
+        name = "jetplane"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == GrayA{N0f8}
@@ -94,7 +94,7 @@ mydir = tempdir() * "/QuartzImages"
         @test eltype(oimg) == eltype(img)
     end
     @testset "Lighthouse" begin
-        @show name = "lighthouse"
+        name = "lighthouse"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
@@ -105,7 +105,7 @@ mydir = tempdir() * "/QuartzImages"
         @test eltype(oimg) == eltype(img)
     end
     @testset "Mandrill" begin
-        @show name = "mandrill"
+        name = "mandrill"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB{N0f8}
@@ -113,10 +113,11 @@ mydir = tempdir() * "/QuartzImages"
         QuartzImageIO.save_(out_name, img, "public.png")
         oimg = load(out_name)
         @test size(oimg) == size(img)
+        # RGB4 vs. RGB problem
         @test_skip eltype(oimg) == eltype(img)
     end
     @testset "Moonsurface" begin
-        @show name = "moonsurface"
+        name = "moonsurface"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == Gray{N0f8}
@@ -127,7 +128,7 @@ mydir = tempdir() * "/QuartzImages"
         @test eltype(oimg) == eltype(img)
     end
     @testset "Mountainstream" begin
-        @show name = "mountainstream"
+        name = "mountainstream"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
@@ -138,7 +139,7 @@ mydir = tempdir() * "/QuartzImages"
         @test eltype(oimg) == eltype(img)
     end
     @testset "MRI Stack" begin
-        @show name = "mri-stack"
+        name = "mri-stack"
         img = testimage(name)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
@@ -148,7 +149,7 @@ mydir = tempdir() * "/QuartzImages"
 #        @test_skip load(out_name) == convert(RGBA{N0f8}, img)
     end
     @testset "M51" begin
-        @show name = "m51"
+        name = "m51"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == Gray{N0f16}
@@ -159,7 +160,7 @@ mydir = tempdir() * "/QuartzImages"
         @test eltype(oimg) == eltype(img)
     end
     @testset "HeLa cells" begin
-        @show name = "hela-cells"
+        name = "hela-cells"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB{N0f16}
@@ -170,7 +171,7 @@ mydir = tempdir() * "/QuartzImages"
         @test eltype(oimg) == eltype(img)
     end
     @testset "Blobs GIF" begin
-        @show name = "blobs"
+        name = "blobs"
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
@@ -181,7 +182,7 @@ mydir = tempdir() * "/QuartzImages"
         @test eltype(oimg) == eltype(img)
     end
     @testset "Multichannel timeseries OME" begin
-        @show name = "multi-channel-time-series.ome"
+        name = "multi-channel-time-series.ome"
         img = testimage(name)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
@@ -211,4 +212,4 @@ end
 #     end
 # end
 
-# rm(mydir, recursive=true)
+rm(mydir, recursive=true)

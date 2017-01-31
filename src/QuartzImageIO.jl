@@ -258,9 +258,9 @@ function save_(fname, img::AbstractArray, image_type::String, permute_horizontal
     permute_horizontal && (imgm = permutedims_horizontal(imgm))
     ndims(imgm) > 3 && error("QuartzImageIO: at most 3 dimensions are supported")
     buf = to_explicit(to_contiguous(imgm))
-    @show eltype(imgm)
+    eltype(imgm)
     # Color type and order
-    @show T = eltype(img)
+    T = eltype(img)
     bitmap_info = 0
     if T <: Gray
         bitmap_info |= kCGImageAlphaNone
@@ -292,7 +292,7 @@ function save_(fname, img::AbstractArray, image_type::String, permute_horizontal
         error("QuartzImageIO: tried to save unknown buffer type $T")
     end
     # Image bit depth
-    @show S = eltype(buf)
+    S = eltype(buf)
     if S <: Union{Int8, UInt8}
         bits_per_component = 8
         bitmap_info |= kCGBitmapByteOrderDefault
