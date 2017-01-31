@@ -232,6 +232,9 @@ end
 
 - fname is the name of the file to save to
 - image_type should be one of Apple's image types (eg. "public.jpeg")
+- permute_horizontal, if true, will transpose the image (flip x and y)
+- mapi is the mapping to apply to the data before saving. Defaults to `identity`.
+  A useful alternative value is `clamp01nan`.
 """
 function save_(fname, img::AbstractArray, image_type::String, permute_horizontal=false; mapi = identity)
     # Setup buffer
