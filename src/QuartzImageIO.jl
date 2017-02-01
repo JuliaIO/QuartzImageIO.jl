@@ -250,7 +250,6 @@ function save_(fname, img::AbstractArray, image_type::String, permute_horizontal
     permute_horizontal && (imgm = permutedims_horizontal(imgm))
     ndims(imgm) > 3 && error("QuartzImageIO: at most 3 dimensions are supported")
     buf = to_explicit(to_contiguous(imgm))
-    eltype(imgm)
     # Color type and order
     T = eltype(img)
     bitmap_info = 0
@@ -275,7 +274,7 @@ function save_(fname, img::AbstractArray, image_type::String, permute_horizontal
         colorspace = CGColorSpaceCreateWithName("kCGColorSpaceSRGB")
         components = 4
     elseif T <: Union{BGRA, ABGR}
-        error("QuartzImageIO can only handle RBG byte orders")
+        error("QuartzImageIO can only handle RGB byte orders")
     else
         error("QuartzImageIO: tried to save unknown buffer type $T")
     end
