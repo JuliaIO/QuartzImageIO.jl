@@ -1,4 +1,4 @@
-using Base.Test, FileIO, QuartzImageIO, Images, Colors, FixedPointNumbers, TestImages
+using Base.Test, FileIO, QuartzImageIO, ColorTypes, FixedPointNumbers, TestImages
 
 # Saving notes:
 # autumn_leaves and toucan fail as of November 2015. The "edges" of the
