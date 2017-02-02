@@ -4,9 +4,6 @@ module QuartzImageIO
 using Images, ColorTypes, ColorVectorSpace, FixedPointNumbers
 import FileIO: DataFormat, @format_str, File, Stream, filename, stream
 
-# We need to export writemime_, since that's how ImageMagick does it.
-export writemime_
-
 typealias CFURLRef Ptr{Void}
 typealias CFStringRef Ptr{UInt8}
 typealias CFDictionaryRef Ptr{Void}
@@ -302,7 +299,7 @@ function getblob(img::AbstractArray, permute_horizontal, mapi)
     read(open(temp_file))
 end
 
-@deprecate writemime_(io::IO, ::MIME"image/png", img::AbstractArray) save(Stream(format"PNG", io), img)
+#@deprecate writemime_(io::IO, ::MIME"image/png", img::AbstractArray) save(Stream(format"PNG", io), img)
 
 # Element-mapping function. Converts to RGB/RGBA and uses
 # N0f8 "inner" element type.
