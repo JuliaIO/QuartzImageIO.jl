@@ -228,7 +228,7 @@ end
 
 ## Saving Images ###############################################################
 
-""" `save_(fname, img::Image, image_type)`
+""" `save_(fname, img, image_type)`
 
 - fname is the name of the file to save to
 - image_type should be one of Apple's image types (eg. "public.jpeg")
@@ -255,11 +255,11 @@ function save_(fname, img::AbstractArray, image_type::String, permute_horizontal
     bitmap_info = 0
     if T <: Gray
         bitmap_info |= kCGImageAlphaNone
-        colorspace = CGColorSpaceCreateWithName("kCGColorSpaceLinearGray")
+        colorspace = CGColorSpaceCreateWithName("kCGColorSpaceGenericGray")
         components = 1
     elseif T <: GrayA
         bitmap_info |= kCGImageAlphaPremultipliedLast
-        colorspace = CGColorSpaceCreateWithName("kCGColorSpaceLinearGray")
+        colorspace = CGColorSpaceCreateWithName("kCGColorSpaceGenericGray")
         components = 2
     elseif T <: Union{RGB, RGB4}
         bitmap_info |= kCGImageAlphaNoneSkipLast
