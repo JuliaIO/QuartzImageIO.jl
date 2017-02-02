@@ -1,8 +1,8 @@
 __precompile__(true)
 module QuartzImageIO
-#import Base: error, size
+
 using Images, ColorTypes, ColorVectorSpace, FixedPointNumbers
-import FileIO: @format_str, File, Stream, filename, stream
+import FileIO: DataFormat, @format_str, File, Stream, filename, stream
 
 # We need to export writemime_, since that's how ImageMagick does it.
 export writemime_
@@ -15,43 +15,14 @@ typealias CGImageRef Ptr{Void}
 typealias CGColorSpaceRef Ptr{Void}
 typealias CGContextRef Ptr{Void}
 
-image_formats = [
-    format"BMP",
-    format"GIF",
-    format"JPEG",
-    format"PNG",
-    format"TIFF",
-    format"TGA"
-]
+load{T <: DataFormat}(imagefile::File{T}, args...; key_args...) = load_(filename(imagefile), args...; key_args...)
+load(filename::AbstractString, args...; key_args...) = load_(filename, args...; key_args...)
+load{T <: DataFormat}(imgstream::Stream{T}, args...; key_args...) = load_(read(stream(imgstream)), args...; key_args...)
+load(imgstream::IO, args...; key_args...) = load_(read(imgstream), args...; key_args...)
 
-# There's a way to get the mapping through
-# UTTypeCreatePreferredIdentifierForTag, but a dict is less trouble for now
-const apple_format_names = Dict(format"BMP" => "com.microsoft.bmp",
-                                format"GIF" => "com.compuserve.gif",
-                                format"JPEG" => "public.jpeg",
-                                format"PNG" => "public.png",
-                                format"TIFF" => "public.tiff",
-                                format"TGA" => "com.truevision.tga-image")
-
-# The rehash! is necessary because of a precompilation issue
-function __init__() Base.rehash!(apple_format_names) end
-
-get_apple_format_name(format) = apple_format_names[format]
-
-for format in image_formats
-    eval(quote
-        load(image::File{$format}, args...; key_args...) = load_(filename(image), args...; key_args...)
-        load(io::Stream{$format}, args...; key_args...) = load_(read(io), args...; key_args...)
-        save(fname::File{$format}, img, args...; key_args...) =
-            save_(filename(fname), img, get_apple_format_name($format), args...;
-                  key_args...)
-        save(io::Stream{$format}, img, args...; key_args...) =
-            save_(stream(io), img, get_apple_format_name($format), args...;
-                  key_args...)
-    end)
-end
-
-
+save{T <: DataFormat}(imagefile::File{T}, args...; key_args...) = save_(imagefile, args...; key_args...)
+save(filename::AbstractString, args...; key_args...) = save_(filename, args...; key_args...)
+save{T <: DataFormat}(imgstream::Stream{T}, args...; key_args...) = save_(imgstream, args...; key_args...)
 
 function load_(b::Array{UInt8, 1})
     data = CFDataCreate(b)
@@ -60,7 +31,7 @@ function load_(b::Array{UInt8, 1})
     read_and_release_imgsrc(imgsrc)
 end
 
-function load_(filename)
+function load_(filename::String)
     myURL = CFURLCreateWithFileSystemPath(abspath(filename))
     imgsrc = CGImageSourceCreateWithURL(myURL)
     CFRelease(myURL)
@@ -228,15 +199,15 @@ end
 
 ## Saving Images ###############################################################
 
-""" `save_(fname, img, image_type)`
+""" `save_(f, img, image_type)`
 
-- fname is the name of the file to save to
+- f is the file to save to, of type `FileIO.File{DataFormat}`
 - image_type should be one of Apple's image types (eg. "public.jpeg")
 - permute_horizontal, if true, will transpose the image (flip x and y)
 - mapi is the mapping to apply to the data before saving. Defaults to `identity`.
   A useful alternative value is `clamp01nan`.
 """
-function save_(fname, img::AbstractArray, image_type::String, permute_horizontal=false; mapi = identity)
+function save_{R <: DataFormat}(f::File{R}, img::AbstractArray; permute_horizontal=false, mapi=identity)
     # Setup buffer
     local imgm
     try
@@ -293,13 +264,21 @@ function save_(fname, img::AbstractArray, image_type::String, permute_horizontal
     # Image size
     width, height = size(imgm)
     bytes_per_row = width*components*bits_per_component ÷ 8
+    # Output type
+    apple_format_names = Dict(format"BMP" => "com.microsoft.bmp",
+                              format"GIF" => "com.compuserve.gif",
+                              format"JPEG" => "public.jpeg",
+                              format"PNG" => "public.png",
+                              format"TIFF" => "public.tiff",
+                              format"TGA" => "com.truevision.tga-image")
+    image_type = apple_format_names[R]
     # Ready to save
     bmp_context = CGBitmapContextCreate(buf, width, height, bits_per_component,
                                         bytes_per_row, colorspace, bitmap_info)
     CFRelease(colorspace)
     out_image = CGBitmapContextCreateImage(bmp_context)
     CFRelease(bmp_context)
-    out_url = CFURLCreateWithFileSystemPath(fname)
+    out_url = CFURLCreateWithFileSystemPath(filename(f))
     out_dest = CGImageDestinationCreateWithURL(out_url, image_type, 1)
     CGImageDestinationAddImage(out_dest, out_image)
     CGImageDestinationFinalize(out_dest)
@@ -309,18 +288,17 @@ function save_(fname, img::AbstractArray, image_type::String, permute_horizontal
     nothing
 end
 
-function save_(io::IO, img::AbstractArray, image_type::String, permute_horizontal=false; mapi = clamp01nan)
-    write(io, getblob(img, image_type, permute_horizontal, mapi))
+function save_(io::Stream, img::AbstractArray; permute_horizontal=false, mapi = clamp01nan)
+    write(io, getblob(img, permute_horizontal, mapi))
 end
 
-function getblob(img::AbstractArray, format::String, permute_horizontal, mapi)
+function getblob(img::AbstractArray, permute_horizontal, mapi)
     # In theory we could save the image directly to a buffer via
     # CGImageDestinationCreateWithData - TODO. But I couldn't figure out how
     # to get the length of the CFMutableData object. So I take the inefficient
     # route of saving the image to a temporary file for now.
-    @assert format == "png" || format == "public.png" # others not supported for now
     temp_file = "/tmp/QuartzImageIO_temp.png"
-    save_(temp_file, img, "public.png", permute_horizontal, mapi=mapi)
+    save(File(format"PNG", temp_file), img, permute_horizontal=permute_horizontal, mapi=mapi)
     read(open(temp_file))
 end
 

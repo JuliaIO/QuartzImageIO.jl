@@ -26,12 +26,7 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == RGBA{N0f16}
         out_name = joinpath(mydir, name * ".png")
-        # Calling `save` relies on FileIO dispatching to us, so we
-        # make the call explicit.
-        QuartzImageIO.save_(out_name, img, "public.png")
-        # Ideally, the `convert` would not be necessary, but the
-        # saving step goes through a conversion, so we need to do it
-        # in this test
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
@@ -43,11 +38,12 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == Gray{N0f8}
-        out_name = joinpath(mydir, name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+        out_name = joinpath(mydir, name * ".tif")
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "Earth Apollo" begin
         name = "earth_apollo17"
@@ -55,10 +51,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
         out_name = joinpath(mydir, name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "Fabio" begin
         name = "fabio"
@@ -66,10 +63,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
         out_name = joinpath(mydir, name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "House" begin
         name = "house"
@@ -77,10 +75,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == GrayA{N0f8}
         out_name = joinpath(mydir, name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "Jetplane" begin
         name = "jetplane"
@@ -88,10 +87,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == GrayA{N0f8}
         out_name = joinpath(mydir, name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "Lighthouse" begin
         name = "lighthouse"
@@ -99,10 +99,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
         out_name = joinpath(mydir, name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "Mandrill" begin
         name = "mandrill"
@@ -110,11 +111,12 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == RGB{N0f8}
         out_name = joinpath(mydir, name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         # RGB4 vs. RGB problem
-        #@test_skip eltype(oimg) == eltype(img)
+#        @test_skip eltype(oimg) == eltype(img)
+#        @test oimg == img
     end
     @testset "Moonsurface" begin
         name = "moonsurface"
@@ -122,10 +124,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == Gray{N0f8}
         out_name = joinpath(mydir, name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "Mountainstream" begin
         name = "mountainstream"
@@ -133,10 +136,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
         out_name = joinpath(mydir, name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "MRI Stack" begin
         name = "mri-stack"
@@ -144,9 +148,10 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
         out_name = joinpath(mydir, name * ".png")
-#        QuartzImageIO.save_(out_name, img, "public.png")
+#        save(out_name, img)
         # Stack saving isn't implemented yet
 #        @test_skip load(out_name) == convert(RGBA{N0f8}, img)
+#        @test oimg == img
     end
     @testset "M51" begin
         name = "m51"
@@ -154,10 +159,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == Gray{N0f16}
         out_name = joinpath(mydir, name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "HeLa cells" begin
         name = "hela-cells"
@@ -165,10 +171,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == RGB{N0f16}
         out_name = joinpath(mydir, name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "Blobs GIF" begin
         name = "blobs"
@@ -176,10 +183,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
         out_name = joinpath(mydir, name * ".png")
-        QuartzImageIO.save_(out_name, img, "public.png")
+        save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "Multichannel timeseries OME" begin
         name = "multi-channel-time-series.ome"
@@ -187,9 +195,10 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
         out_name = joinpath(mydir, name * ".png")
-#        QuartzImageIO.save_(out_name, img, "public.png")
+#        save(out_name, img)
         # Stack saving isn't implemented yet
 #        @test_skip load(out_name) == convert(RGBA{N0f8}, img)
+#        @test oimg == img
     end
 end
 
