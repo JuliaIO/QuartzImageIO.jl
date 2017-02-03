@@ -116,6 +116,8 @@ function read_and_release_imgsrc(imgsrc)
         return nothing
     end
     CFRelease(imgsrc)
+    # TODO: set orientation here.  See:
+    # https://github.com/JuliaIO/ImageMagick.jl/blob/f5fd22dbe5564e57e710de54254425e34fd6571c/src/ImageMagick.jl#L125
     buf
 end
 
@@ -217,7 +219,7 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray;
         rethrow()
     end
     permute_horizontal && (imgm = permutedims_horizontal(imgm))
-    ndims(imgm) > 3 && error("QuartzImageIO: at most 3 dimensions are supported")
+    ndims(imgm) > 3 && error("QuartzImageIO: At most 3 dimensions are supported for saving.")
     buf = to_explicit(to_contiguous(imgm))
     # Color type and order
     T = eltype(img)
