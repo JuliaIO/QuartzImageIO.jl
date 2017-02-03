@@ -204,7 +204,8 @@ end
 - mapi is the mapping to apply to the data before saving. Defaults to `identity`.
   A useful alternative value is `clamp01nan`.
 """
-function save_{R <: DataFormat}(f::File{R}, img::AbstractArray; permute_horizontal=false, mapi=identity)
+function save_{R <: DataFormat}(f::File{R}, img::AbstractArray;
+                                permute_horizontal=false, mapi=identity)
     # Setup buffer
     local imgm
     try
@@ -259,7 +260,8 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray; permute_horizont
         bitmap_info |= kCGBitmapByteOrder32Little
     end
     # Image size
-    width, height = size(imgm)
+    width, height, = size(imgm)
+    nframes = size(imgm, 3)
     bytes_per_row = width*components*bits_per_component ÷ 8
     # Output type
     apple_format_names = Dict(format"BMP" => "com.microsoft.bmp",
@@ -270,19 +272,29 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray; permute_horizont
                               format"TGA" => "com.truevision.tga-image")
     image_type = apple_format_names[R]
     # Ready to save
-    info("w: $width, h: $height, bpc: $bits_per_component, bpr: $bytes_per_row, info: $bitmap_info")
-    bmp_context = CGBitmapContextCreate(buf, width, height, bits_per_component,
-                                        bytes_per_row, colorspace, bitmap_info)
-    CFRelease(colorspace)
-    out_image = CGBitmapContextCreateImage(bmp_context)
-    CFRelease(bmp_context)
     out_url = CFURLCreateWithFileSystemPath(filename(f))
-    out_dest = CGImageDestinationCreateWithURL(out_url, image_type, 1)
-    CGImageDestinationAddImage(out_dest, out_image)
+    out_dest = CGImageDestinationCreateWithURL(out_url, image_type, nframes)
+    if ndims(imgm) == 2
+        bmp_context = CGBitmapContextCreate(buf, width, height, bits_per_component,
+                                            bytes_per_row, colorspace, bitmap_info)
+        out_image = CGBitmapContextCreateImage(bmp_context)
+        CFRelease(bmp_context)
+        CGImageDestinationAddImage(out_dest, out_image)
+        CGImageRelease(out_image)
+    else
+        for i in 1:nframes
+            bmp_context = CGBitmapContextCreate(buf[:,:,i], width, height, bits_per_component,
+                                                bytes_per_row, colorspace, bitmap_info)
+            out_image = CGBitmapContextCreateImage(bmp_context)
+            CFRelease(bmp_context)
+            CGImageDestinationAddImage(out_dest, out_image)
+            CGImageRelease(out_image)
+        end
+    end
     CGImageDestinationFinalize(out_dest)
     CFRelease(out_dest)
+    CFRelease(colorspace)
     CFRelease(out_url)
-    CGImageRelease(out_image)
     nothing
 end
 

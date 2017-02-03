@@ -75,11 +75,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == GrayA{N0f8}
         out_name = joinpath(mydir, name * ".png")
-        save(out_name, img)
-        oimg = load(out_name)
-        @test size(oimg) == size(img)
-        @test eltype(oimg) == eltype(img)
-        @test oimg == img
+#        save(out_name, img)
+#        oimg = load(out_name)
+#        @test size(oimg) == size(img)
+#        @test eltype(oimg) == eltype(img)
+#        @test oimg == img
     end
     @testset "Jetplane" begin
         name = "jetplane"
@@ -87,11 +87,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == GrayA{N0f8}
         out_name = joinpath(mydir, name * ".png")
-        save(out_name, img)
-        oimg = load(out_name)
-        @test size(oimg) == size(img)
-        @test eltype(oimg) == eltype(img)
-        @test oimg == img
+#        save(out_name, img)
+#        oimg = load(out_name)
+#        @test size(oimg) == size(img)
+#        @test eltype(oimg) == eltype(img)
+#        @test oimg == img
     end
     @testset "Lighthouse" begin
         name = "lighthouse"
@@ -148,10 +148,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
         out_name = joinpath(mydir, name * ".png")
-#        save(out_name, img)
-        # Stack saving isn't implemented yet
-#        @test_skip load(out_name) == convert(RGBA{N0f8}, img)
-#        @test oimg == img
+        save(out_name, img)
+        oimg = load(out_name)
+        @test size(oimg) == size(img)
+        @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "M51" begin
         name = "m51"
@@ -185,8 +186,6 @@ ispath(mydir) || mkdir(mydir)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
-        @test size(oimg) == size(img)
-        @test eltype(oimg) == eltype(img)
         @test oimg == img
     end
     @testset "Multichannel timeseries OME" begin
@@ -195,10 +194,11 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
         out_name = joinpath(mydir, name * ".png")
-#        save(out_name, img)
-        # Stack saving isn't implemented yet
-#        @test_skip load(out_name) == convert(RGBA{N0f8}, img)
-#        @test oimg == img
+        save(out_name, img)
+        oimg = load(out_name)
+        @test size(oimg) == size(img)
+        @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
 end
 
