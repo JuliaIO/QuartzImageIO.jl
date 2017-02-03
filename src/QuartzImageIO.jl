@@ -220,7 +220,7 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray; permute_horizont
     buf = to_explicit(to_contiguous(imgm))
     # Color type and order
     T = eltype(img)
-    bitmap_info = 0
+    bitmap_info = zero(UInt32)
     if T <: Gray
         bitmap_info |= kCGImageAlphaNone
         colorspace = CGColorSpaceCreateWithName("kCGColorSpaceGenericGray")
@@ -270,6 +270,7 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray; permute_horizont
                               format"TGA" => "com.truevision.tga-image")
     image_type = apple_format_names[R]
     # Ready to save
+    info("w: $width, h: $height, bpc: $bits_per_component, bpr: $bytes_per_row, info: $bitmap_info")
     bmp_context = CGBitmapContextCreate(buf, width, height, bits_per_component,
                                         bytes_per_row, colorspace, bitmap_info)
     CFRelease(colorspace)
@@ -294,7 +295,7 @@ function getblob(img::AbstractArray, permute_horizontal, mapi)
     # CGImageDestinationCreateWithData - TODO. But I couldn't figure out how
     # to get the length of the CFMutableData object. So I take the inefficient
     # route of saving the image to a temporary file for now.
-    temp_file = "/tmp/QuartzImageIO_temp.png"
+    temp_file = joinpath(tempdir(), "QuartzImageIO_temp.png")
     save(File(format"PNG", temp_file), img, permute_horizontal=permute_horizontal, mapi=mapi)
     read(open(temp_file))
 end
