@@ -12,14 +12,21 @@ typealias CGImageRef Ptr{Void}
 typealias CGColorSpaceRef Ptr{Void}
 typealias CGContextRef Ptr{Void}
 
-load{T <: DataFormat}(imagefile::File{T}, args...; key_args...) = load_(filename(imagefile), args...; key_args...)
-load(filename::AbstractString, args...; key_args...) = load_(filename, args...; key_args...)
-load{T <: DataFormat}(imgstream::Stream{T}, args...; key_args...) = load_(read(stream(imgstream)), args...; key_args...)
-load(imgstream::IO, args...; key_args...) = load_(read(imgstream), args...; key_args...)
+load{T <: DataFormat}(imagefile::File{T}, args...; key_args...) =
+    load_(filename(imagefile), args...; key_args...)
+load(filename::AbstractString, args...; key_args...) =
+    load_(filename, args...; key_args...)
+load{T <: DataFormat}(imgstream::Stream{T}, args...; key_args...) =
+    load_(read(stream(imgstream)), args...; key_args...)
+load(imgstream::IO, args...; key_args...) =
+    load_(read(imgstream), args...; key_args...)
 
-save{T <: DataFormat}(imagefile::File{T}, args...; key_args...) = save_(imagefile, args...; key_args...)
-save(filename::AbstractString, args...; key_args...) = save_(filename, args...; key_args...)
-save{T <: DataFormat}(imgstream::Stream{T}, args...; key_args...) = save_(imgstream, args...; key_args...)
+save{T <: DataFormat}(imagefile::File{T}, args...; key_args...) =
+    save_(imagefile, args...; key_args...)
+save(filename::AbstractString, args...; key_args...) =
+    save_(filename, args...; key_args...)
+save{T <: DataFormat}(imgstream::Stream{T}, args...; key_args...) =
+    save_(imgstream, args...; key_args...)
 
 function load_(b::Array{UInt8, 1})
     data = CFDataCreate(b)
@@ -79,7 +86,8 @@ function read_and_release_imgsrc(imgsrc)
     if imtype == "public.tiff"
         tiffdict = CFDictionaryGetValue(dict, "{TIFF}")
         imagedescription = tiffdict != C_NULL ?
-            CFStringGetCString(CFDictionaryGetValue(tiffdict, "ImageDescription")) : nothing
+            CFStringGetCString(CFDictionaryGetValue(tiffdict,"ImageDescription")) :
+            nothing
     end
     CFRelease(dict)
 
@@ -170,7 +178,8 @@ function fillgrayalpha!(buffer::AbstractArray{UInt8, 3}, imgsrc)
     CFRelease(imagepixels)
     CGImageRelease(CGimg)
 end
-fillgrayalpha!(buffer::AbstractArray{N0f8, 3}, imgsrc) = fillgrayalpha!(reinterpret(UInt8, buffer), imgsrc)
+fillgrayalpha!(buffer::AbstractArray{N0f8, 3}, imgsrc) =
+    fillgrayalpha!(reinterpret(UInt8, buffer), imgsrc)
 
 function fillcolor!{T}(buffer::AbstractArray{T, 3}, imgsrc, nc)
     imwidth, imheight = size(buffer, 2), size(buffer, 3)
@@ -285,8 +294,9 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray;
         CGImageRelease(out_image)
     else
         for i in 1:nframes
-            bmp_context = CGBitmapContextCreate(buf[:,:,i], width, height, bits_per_component,
-                                                bytes_per_row, colorspace, bitmap_info)
+            bmp_context = CGBitmapContextCreate(buf[:,:,i], width, height,
+                                                bits_per_component, bytes_per_row,
+                                                colorspace, bitmap_info)
             out_image = CGBitmapContextCreateImage(bmp_context)
             CFRelease(bmp_context)
             CGImageDestinationAddImage(out_dest, out_image)
@@ -300,7 +310,8 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray;
     nothing
 end
 
-function save_(io::Stream, img::AbstractArray; permute_horizontal=false, mapi = clamp01nan)
+function save_(io::Stream, img::AbstractArray;
+               permute_horizontal=false, mapi = clamp01nan)
     write(io, getblob(img, permute_horizontal, mapi))
 end
 
@@ -310,11 +321,10 @@ function getblob(img::AbstractArray, permute_horizontal, mapi)
     # to get the length of the CFMutableData object. So I take the inefficient
     # route of saving the image to a temporary file for now.
     temp_file = joinpath(tempdir(), "QuartzImageIO_temp.png")
-    save(File(format"PNG", temp_file), img, permute_horizontal=permute_horizontal, mapi=mapi)
+    save(File(format"PNG", temp_file), img,
+         permute_horizontal=permute_horizontal, mapi=mapi)
     read(open(temp_file))
 end
-
-#@deprecate writemime_(io::IO, ::MIME"image/png", img::AbstractArray) save(Stream(format"PNG", io), img)
 
 # Element-mapping function. Converts to RGB/RGBA and uses
 # N0f8 "inner" element type.
@@ -526,10 +536,12 @@ end
 # CGImageSource
 
 CGImageSourceCreateWithURL(myURL::Ptr{Void}) =
-    ccall((:CGImageSourceCreateWithURL, imageio), Ptr{Void}, (Ptr{Void}, Ptr{Void}), myURL, C_NULL)
+    ccall((:CGImageSourceCreateWithURL, imageio), Ptr{Void},
+          (Ptr{Void}, Ptr{Void}), myURL, C_NULL)
 
 CGImageSourceCreateWithData(data::Ptr{Void}) =
-    ccall((:CGImageSourceCreateWithData, imageio), Ptr{Void}, (Ptr{Void}, Ptr{Void}), data, C_NULL)
+    ccall((:CGImageSourceCreateWithData, imageio), Ptr{Void},
+          (Ptr{Void}, Ptr{Void}), data, C_NULL)
 
 CGImageSourceGetType(CGImageSourceRef::Ptr{Void}) =
     ccall(:CGImageSourceGetType, Ptr{Void}, (Ptr{Void}, ), CGImageSourceRef)
@@ -617,7 +629,8 @@ CFDataGetBytePtr{T}(CFDataRef::Ptr{Void}, ::Type{T}) =
 #     ccall(:CFDataGetLength, Ptr{Int64}, (Ptr{Void}, ), CFDataRef)
 
 CFDataCreate(bytes::Array{UInt8,1}) =
-    ccall(:CFDataCreate,Ptr{Void},(Ptr{Void},Ptr{UInt8},Csize_t),C_NULL,bytes,length(bytes))
+    ccall(:CFDataCreate, Ptr{Void}, (Ptr{Void}, Ptr{UInt8}, Csize_t),
+          C_NULL, bytes, length(bytes))
 
 ### For output #################################################################
 
@@ -690,8 +703,8 @@ function CGBitmapContextCreate(data, # void*
                      CGContextRef,
                      (Ptr{Void}, Csize_t, Csize_t, Csize_t, Csize_t,
                       CGColorSpaceRef, UInt32),
-                     data, width, height, bitsPerComponent, bytesPerRow, space,
-                     bitmapInfo))
+                     data, width, height, bitsPerComponent, bytesPerRow,
+                     space, bitmapInfo))
 end
 
 function CGBitmapContextCreateImage(context_ref::CGContextRef)
