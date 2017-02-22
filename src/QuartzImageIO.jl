@@ -271,7 +271,12 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray;
         bits_per_component = 16
         bitmap_info |= kCGBitmapByteOrder16Little
     elseif S <: Union{Int32, UInt32}
+        # does this even exist?
         bits_per_component = 32
+        bitmap_info |= kCGBitmapByteOrder32Little
+    elseif S <: Float32
+        bits_per_component = 32
+        bitmap_info |= kCGBitmapFloatComponents
         bitmap_info |= kCGBitmapByteOrder32Little
     end
     # Image size
@@ -350,6 +355,7 @@ mapCG{T<:Normed}(c::GrayA{T}) = c
 mapCG(c::Color3) = mapCG(convert(RGBA, c))
 mapCG{T}(c::RGB{T}) = convert(RGBA{N0f8}, c)
 mapCG{T<:Normed}(c::RGB{T}) = convert(RGBA{T}, c)
+mapCG{T<:Real}(c::RGB4{T}) = convert(RGBA{T}, c)
 
 mapCG(c::Color4) = mapCG(convert(RGBA, c))
 mapCG{T}(c::RGBA{T}) = convert(RGBA{N0f8}, c)
@@ -370,6 +376,7 @@ to_contiguous(A::ColorView) = to_contiguous(channelview(A))
 to_explicit{C<:Colorant}(A::Array{C}) = to_explicit(channelview(A))
 to_explicit{T}(A::ChannelView{T}) = to_explicit(copy!(Array{T}(size(A)), A))
 to_explicit{T<:Normed}(A::Array{T}) = rawview(A)
+to_explicit(A::Array{Float32}) = A
 to_explicit{T<:AbstractFloat}(A::Array{T}) = to_explicit(convert(Array{N0f8}, A))
 
 permutedims_horizontal(img::AbstractVector) = img
