@@ -100,22 +100,22 @@ function read_and_release_imgsrc(imgsrc)
     if colormodel == "Gray" && alphacode == 0 && storagedepth == 1
         buf = Array(Gray{T}, sz)
         fillgray!(reinterpret(T, buf, tuple(sz...)), imgsrc)
-    elseif colormodel == "Gray" && in(alphacode, [1, 3])
+    elseif colormodel == "Gray" && alphacode ∈ [1, 3]
         buf = Array(GrayA{T}, sz)
         fillgrayalpha!(reinterpret(T, buf, tuple(2, sz...)), imgsrc)
-    elseif colormodel == "Gray" && in(alphacode, [2, 4])
+    elseif colormodel == "Gray" && alphacode ∈ [2, 4]
         buf = Array(AGray{T}, sz)
         fillgrayalpha!(reinterpret(T, buf, tuple(2, sz...)), imgsrc)
-    elseif colormodel == "RGB" && in(alphacode, [1, 3])
+    elseif colormodel == "RGB" && alphacode ∈ [1, 3]
         buf = Array(RGBA{T}, sz)
         fillcolor!(reinterpret(T, buf, tuple(4, sz...)), imgsrc, storagedepth)
-    elseif colormodel == "RGB" && in(alphacode, [2, 4])
+    elseif colormodel == "RGB" && alphacode ∈ [2, 4]
         buf = Array(ARGB{T}, sz)
         fillcolor!(reinterpret(T, buf, tuple(4, sz...)), imgsrc, storagedepth)
     elseif colormodel == "RGB" && alphacode == 0
         buf = Array(RGB{T}, sz)
         fillcolor!(reinterpret(T, buf, tuple(3, sz...)), imgsrc, storagedepth)
-    elseif colormodel == "RGB" && in(alphacode, [5, 6])
+    elseif colormodel == "RGB" && alphacode ∈ [5, 6]
         buf = alphacode == 5 ? Array(RGB4{T}, sz) : Array(RGB1{T}, sz)
         fillcolor!(reinterpret(T, buf, tuple(4, sz...)), imgsrc, storagedepth)
     else
@@ -138,7 +138,7 @@ function alpha_and_depth(imgsrc)
     # Alpha codes documented here:
     # https://developer.apple.com/library/mac/documentation/graphicsimaging/reference/CGImage/Reference/reference.html#//apple_ref/doc/uid/TP30000956-CH3g-459700
     # Dividing bits per pixel by bits per component tells us how many
-    # color + alpha slices we have in the file.
+    # color + alpha components we have in each pixel
     alphacode, convert(Int, div(bitsperpixel, bitspercomponent))
 end
 
@@ -207,6 +207,9 @@ end
 
 ## Saving Images ###############################################################
 
+# For supported pixel formats, see Table 2-1 in:
+# https://developer.apple.com/library/content/documentation/GraphicsImaging/Conceptual/drawingwithquartz2d/dq_context/dq_context.html#//apple_ref/doc/uid/TP30001066-CH203-BCIBHHBB
+
 """ `save_(f, img, image_type)`
 
 - f is the file to save to, of type `FileIO.File{DataFormat}`
@@ -238,6 +241,7 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray;
         colorspace = CGColorSpaceCreateWithName("kCGColorSpaceGenericGray")
         components = 1
     elseif T <: GrayA
+        # Not sure if this one actually works.  This is not an Apple supported combination
         bitmap_info |= kCGImageAlphaPremultipliedLast
         colorspace = CGColorSpaceCreateWithName("kCGColorSpaceGenericGray")
         components = 2
