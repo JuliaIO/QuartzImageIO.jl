@@ -116,9 +116,9 @@ function read_and_release_imgsrc(imgsrc)
         return nothing
     end
     CFRelease(imgsrc)
-    # TODO: set orientation here.  See:
+    # TODO: Override this flip with the Exif information, if available.  See:
     # https://github.com/JuliaIO/ImageMagick.jl/blob/f5fd22dbe5564e57e710de54254425e34fd6571c/src/ImageMagick.jl#L125
-    buf
+    permutedims(buf, [2; 1; 3:ndims(buf)])
 end
 
 function alpha_and_depth(imgsrc)
@@ -207,7 +207,7 @@ end
   A useful alternative value is `clamp01nan`.
 """
 function save_{R <: DataFormat}(f::File{R}, img::AbstractArray;
-                                permute_horizontal=false, mapi=identity)
+                                permute_horizontal=true, mapi=identity)
     # Setup buffer
     local imgm
     try
@@ -300,7 +300,7 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray;
     nothing
 end
 
-function save_(io::Stream, img::AbstractArray; permute_horizontal=false, mapi = clamp01nan)
+function save_(io::Stream, img::AbstractArray; permute_horizontal=true, mapi = clamp01nan)
     write(io, getblob(img, permute_horizontal, mapi))
 end
 
