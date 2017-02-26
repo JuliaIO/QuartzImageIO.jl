@@ -202,6 +202,14 @@ ispath(mydir) || mkdir(mydir)
     end
 end
 
+@testset "Saving" begin
+    imgc = rand(RGB{Float32}, 30, 30)
+    out_name = joinpath(mydir, "float32.png")
+    save(out_name, imgc)
+    inimg = load(out_name)
+    @test size(imgc) == size(inimg)
+end
+
 @testset "Streams" begin
     name = "lighthouse"
     img = testimage(name)
