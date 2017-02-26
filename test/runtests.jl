@@ -25,6 +25,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGBA{N0f16}
+        @test size(img) == (105, 140)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -38,6 +39,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == Gray{N0f8}
+        @test size(img) == (512, 512)
         out_name = joinpath(mydir, name * ".tif")
         save(out_name, img)
         oimg = load(out_name)
@@ -50,6 +52,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
+        @test size(img) == (3002, 3000)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -62,6 +65,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
+        @test size(img) == (256, 256)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -74,6 +78,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == GrayA{N0f8}
+        @test size(img) == (512, 512)
         out_name = joinpath(mydir, name * ".png")
 #        save(out_name, img)
 #        oimg = load(out_name)
@@ -86,6 +91,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == GrayA{N0f8}
+        @test size(img) == (512, 512)
         out_name = joinpath(mydir, name * ".png")
 #        save(out_name, img)
 #        oimg = load(out_name)
@@ -98,6 +104,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
+        @test size(img) == (512, 768)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -110,6 +117,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB{N0f8}
+        @test size(img) == (512, 512)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -123,6 +131,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == Gray{N0f8}
+        @test size(img) == (256, 256)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -135,6 +144,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
+        @test size(img) == (512, 768)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -147,6 +157,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
+        @test size(img) == (226, 186, 27)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -159,6 +170,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == Gray{N0f16}
+        @test size(img) == (510, 320)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -171,6 +183,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB{N0f16}
+        @test size(img) == (512, 672)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -183,6 +196,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
+        @test size(img) == (254, 256)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -193,6 +207,7 @@ ispath(mydir) || mkdir(mydir)
         img = testimage(name)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
+        @test size(img) == (167, 439, 21)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -203,7 +218,7 @@ ispath(mydir) || mkdir(mydir)
 end
 
 @testset "Saving" begin
-    imgc = rand(RGB{Float32}, 30, 30)
+    imgc = rand(RGB{Float32}, 40, 30)
     out_name = joinpath(mydir, "float32.png")
     save(out_name, imgc)
     inimg = load(out_name)
