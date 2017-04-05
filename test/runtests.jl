@@ -1,4 +1,5 @@
-using Base.Test, FileIO, QuartzImageIO, ColorTypes, FixedPointNumbers, TestImages
+using Base.Test, FileIO, QuartzImageIO, ColorTypes
+using FixedPointNumbers, TestImages, ImageAxes
 
 # Saving notes:
 # autumn_leaves and toucan fail as of November 2015. The "edges" of the
@@ -155,11 +156,14 @@ ispath(mydir) || mkdir(mydir)
     @testset "MRI Stack" begin
         name = "mri-stack"
         img = testimage(name)
+        @test isa(img, AxisArray)
+        @test map(step, axisvalues(img)) == (1, 1, 5)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
         @test size(img) == (226, 186, 27)
         out_name = joinpath(mydir, name * ".png")
-        save(out_name, img)
+        # This TestImage has a special case, labeling the axes.  Pop it out.
+        save(out_name, img.data)
         oimg = load(out_name)
         @test size(oimg) == size(img)
         @test eltype(oimg) == eltype(img)
