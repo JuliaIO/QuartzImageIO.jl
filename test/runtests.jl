@@ -1,5 +1,6 @@
 using Base.Test, FileIO, QuartzImageIO, ColorTypes
 using FixedPointNumbers, TestImages, ImageAxes
+using Images  # For ImageMeta
 
 # Saving notes:
 # autumn_leaves and toucan fail as of November 2015. The "edges" of the
@@ -219,6 +220,15 @@ ispath(mydir) || mkdir(mydir)
         @test eltype(oimg) == eltype(img)
         @test oimg == img
     end
+end
+
+@testset "ImageMeta" begin
+    # https://github.com/sisl/PGFPlots.jl/issues/5
+    img = ImageMeta(rand(RGB{N0f8}, 3, 5))
+    out_name = joinpath(mydir, "imagemeta.png")
+    save(out_name, img)
+    oimg = load(out_name)
+    @test oimg == img
 end
 
 @testset "Saving" begin
