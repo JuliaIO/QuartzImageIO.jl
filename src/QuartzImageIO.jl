@@ -1,16 +1,16 @@
 __precompile__(true)
 module QuartzImageIO
 
-using Images, ColorTypes, ColorVectorSpace, FixedPointNumbers
+using ImageCore, ColorTypes, ColorVectorSpace, FixedPointNumbers
 import FileIO: DataFormat, @format_str, File, Stream, filename, stream
 
-typealias CFURLRef Ptr{Void}
-typealias CFStringRef Ptr{UInt8}
-typealias CFDictionaryRef Ptr{Void}
-typealias CGImageDestinationRef Ptr{Void}
-typealias CGImageRef Ptr{Void}
-typealias CGColorSpaceRef Ptr{Void}
-typealias CGContextRef Ptr{Void}
+const CFURLRef = Ptr{Void}
+const CFStringRef = Ptr{UInt8}
+const CFDictionaryRef = Ptr{Void}
+const CGImageDestinationRef = Ptr{Void}
+const CGImageRef = Ptr{Void}
+const CGColorSpaceRef = Ptr{Void}
+const CGContextRef = Ptr{Void}
 
 load{T <: DataFormat}(imagefile::File{T}, args...; key_args...) =
     load_(filename(imagefile), args...; key_args...)
@@ -98,25 +98,25 @@ function read_and_release_imgsrc(imgsrc)
     const ufixedtype = Dict(10=>N6f10, 12=>N4f12, 14=>N2f14, 16=>N0f16)
     T = pixeldepth <= 8 ? N0f8 : ufixedtype[pixeldepth]
     if colormodel == "Gray" && alphacode == 0 && storagedepth == 1
-        buf = Array(Gray{T}, sz)
+        buf = Array{Gray{T}}(sz)
         fillgray!(reinterpret(T, buf, tuple(sz...)), imgsrc)
     elseif colormodel == "Gray" && alphacode ∈ [1, 3]
-        buf = Array(GrayA{T}, sz)
+        buf = Array{GrayA{T}}(sz)
         fillgrayalpha!(reinterpret(T, buf, tuple(2, sz...)), imgsrc)
     elseif colormodel == "Gray" && alphacode ∈ [2, 4]
-        buf = Array(AGray{T}, sz)
+        buf = Array{AGray{T}}(sz)
         fillgrayalpha!(reinterpret(T, buf, tuple(2, sz...)), imgsrc)
     elseif colormodel == "RGB" && alphacode ∈ [1, 3]
-        buf = Array(RGBA{T}, sz)
+        buf = Array{RGBA{T}}(sz)
         fillcolor!(reinterpret(T, buf, tuple(4, sz...)), imgsrc, storagedepth)
     elseif colormodel == "RGB" && alphacode ∈ [2, 4]
-        buf = Array(ARGB{T}, sz)
+        buf = Array{ARGB{T}}(sz)
         fillcolor!(reinterpret(T, buf, tuple(4, sz...)), imgsrc, storagedepth)
     elseif colormodel == "RGB" && alphacode == 0
-        buf = Array(RGB{T}, sz)
+        buf = Array{RGB{T}}(sz)
         fillcolor!(reinterpret(T, buf, tuple(3, sz...)), imgsrc, storagedepth)
     elseif colormodel == "RGB" && alphacode ∈ [5, 6]
-        buf = alphacode == 5 ? Array(RGB4{T}, sz) : Array(RGB1{T}, sz)
+        buf = alphacode == 5 ? Array{RGB4{T}}(sz) : Array{RGB1{T}}(sz)
         fillcolor!(reinterpret(T, buf, tuple(4, sz...)), imgsrc, storagedepth)
     else
         warn("Unknown colormodel ($colormodel) and alphacode ($alphacode) found by QuartzImageIO")
@@ -173,8 +173,8 @@ function fillgrayalpha!(buffer::AbstractArray{UInt8, 3}, imgsrc)
     imagepixels = CopyImagePixels(CGimg)
     pixelptr = CFDataGetBytePtr(imagepixels, UInt16)
     imbuffer = unsafe_wrap(Array, pixelptr, (imwidth, imheight), false)
-    buffer[1, :, :] = imbuffer & 0xff
-    buffer[2, :, :] = div(imbuffer & 0xff00, 256)
+    buffer[1, :, :] = imbuffer .& 0xff
+    buffer[2, :, :] = div.(imbuffer .& 0xff00, 256)
     CFRelease(imagepixels)
     CGImageRelease(CGimg)
 end
@@ -336,10 +336,10 @@ end
 
 # Element-mapping function. Converts to RGB/RGBA and uses
 # N0f8 "inner" element type.
-typealias Color1{T}            Color{T,1}
-typealias Color2{T,C<:Color1}  TransparentColor{C,T,2}
-typealias Color3{T}            Color{T,3}
-typealias Color4{T,C<:Color3}  TransparentColor{C,T,4}
+const Color1{T} = Color{T, 1}
+const Color2{T, C<:Color1} = TransparentColor{C, T, 2}
+const Color3{T} = Color{T, 3}
+const Color4{T, C<:Color3} = TransparentColor{C, T, 4}
 
 mapCG(c::Color1) = mapCG(convert(Gray, c))
 mapCG{T}(c::Gray{T}) = convert(Gray{N0f8}, c)
@@ -415,11 +415,9 @@ const kCFNumberMaxType = 16
 include("CG_const.jl")
 
 # Objective-C and NS wrappers
-oms{T}(id, uid, ::Type{T}=Ptr{Void}) =
-    ccall(:objc_msgSend, T, (Ptr{Void}, Ptr{Void}), id, selector(uid))
+oms(id, uid) = ccall(:objc_msgSend, Ptr{Void}, (Ptr{Void}, Ptr{Void}), id, selector(uid))
 
-ogc{T}(id, ::Type{T}=Ptr{Void}) =
-    ccall((:objc_getClass, "Cocoa.framework/Cocoa"), Ptr{Void}, (Ptr{UInt8}, ), id)
+ogc(id) = ccall((:objc_getClass, "Cocoa.framework/Cocoa"), Ptr{Void}, (Ptr{UInt8}, ), id)
 
 selector(sel::String) = ccall(:sel_getUid, Ptr{Void}, (Ptr{UInt8}, ), sel)
 
@@ -527,7 +525,7 @@ CFBooleanGetValue(CFBoolean::Ptr{Void}) =
 # CFString
 function CFStringGetCString(CFStringRef::Ptr{Void})
     CFStringRef == C_NULL && return ""
-    buffer = Array(UInt8, 1024)  # does this need to be bigger for Open Microscopy TIFFs?
+    buffer = Array{UInt8}(1024)  # does this need to be bigger for Open Microscopy TIFFs?
     res = ccall(:CFStringGetCString, Bool, (Ptr{Void}, Ptr{UInt8}, UInt, UInt16),
                 CFStringRef, buffer, length(buffer), 0x0600)
     res == C_NULL && return ""
