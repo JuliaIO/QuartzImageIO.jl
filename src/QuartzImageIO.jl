@@ -1,7 +1,7 @@
 __precompile__(true)
 module QuartzImageIO
 
-using ImageCore, ColorTypes, ColorVectorSpace, FixedPointNumbers
+using Images, ColorTypes, ColorVectorSpace, FixedPointNumbers
 import FileIO: DataFormat, @format_str, File, Stream, filename, stream
 
 const CFURLRef = Ptr{Void}
