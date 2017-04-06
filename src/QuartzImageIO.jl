@@ -367,7 +367,7 @@ mapCG(x::Normed) = x
 
 # Make the data contiguous in memory, because writers don't handle stride.
 to_contiguous(A::Array) = A
-to_contiguous(A::AbstractArray) = copy(A)
+to_contiguous(A::AbstractArray) = convert(Array, A)
 to_contiguous(A::SubArray) = copy(A)
 to_contiguous(A::BitArray) = convert(Array{N0f8}, A)
 to_contiguous(A::ColorView) = to_contiguous(channelview(A))
