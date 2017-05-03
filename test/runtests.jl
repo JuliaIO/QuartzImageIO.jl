@@ -1,6 +1,7 @@
 using Base.Test, FileIO, QuartzImageIO, ColorTypes
 using FixedPointNumbers, TestImages, ImageAxes
 using Images  # For ImageMeta
+using OffsetArrays
 
 # Saving notes:
 # autumn_leaves and toucan fail as of November 2015. The "edges" of the
@@ -258,4 +259,14 @@ end
     end
 end
 
+@testset "OffsetArrays" begin
+    img = OffsetArray(Gray{N0f8}[1 0; 0 1], 0:1, 3:4)
+    fn = joinpath(mydir, "indices.png")
+    save(fn, img)
+    imgr = load(fn)
+    @test imgr == parent(img)
+end
+
 rm(mydir, recursive=true)
+
+@test !isdefined(:ImageMagick)

@@ -232,7 +232,8 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray;
     end
     permute_horizontal && (imgm = permutedims_horizontal(imgm))
     ndims(imgm) > 3 && error("QuartzImageIO: At most 3 dimensions are supported for saving.")
-    buf = to_explicit(to_contiguous(imgm))
+    contig = to_contiguous(imgm)
+    buf = to_explicit(contig)
     # Color type and order
     T = eltype(img)
     bitmap_info = zero(UInt32)
@@ -280,8 +281,8 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray;
         bitmap_info |= kCGBitmapByteOrder32Little
     end
     # Image size
-    width, height, = size(imgm)
-    nframes = size(imgm, 3)
+    width, height = size(contig)
+    nframes = size(contig, 3)
     bytes_per_row = width*components*bits_per_component ÷ 8
     # Output type
     apple_format_names = Dict(format"BMP" => "com.microsoft.bmp",
@@ -367,8 +368,7 @@ mapCG(x::Normed) = x
 
 # Make the data contiguous in memory, because writers don't handle stride.
 to_contiguous(A::Array) = A
-to_contiguous(A::AbstractArray) = convert(Array, A)
-to_contiguous(A::SubArray) = copy(A)
+to_contiguous(A::AbstractArray) = collect(A)
 to_contiguous(A::BitArray) = convert(Array{N0f8}, A)
 to_contiguous(A::ColorView) = to_contiguous(channelview(A))
 
