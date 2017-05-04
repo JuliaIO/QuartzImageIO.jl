@@ -233,11 +233,47 @@ end
 end
 
 @testset "Saving" begin
-    imgc = rand(RGB{Float32}, 40, 30)
-    out_name = joinpath(mydir, "float32.png")
-    save(out_name, imgc)
-    inimg = load(out_name)
-    @test size(imgc) == size(inimg)
+    @testset "RGB" begin
+        imgc = rand(RGB{Float32}, 40, 30)
+        out_name = joinpath(mydir, "float32.png")
+        save(out_name, imgc)
+        inimg = load(out_name)
+        @test size(imgc) == size(inimg)
+    end
+
+    @testset "HSV" begin
+        # issue 37
+        srand(42)
+        img = rand(HSV{Float32}, 8, 10)
+        out_name = joinpath(mydir, "hsv.png")
+        save(out_name, img)
+        oimg = load(out_name)
+        @test HSV.(oimg)[1].h ≈ img[1].h atol=0.07
+        @test HSV.(oimg)[1].s ≈ img[1].s atol=0.001
+        @test HSV.(oimg)[1].v ≈ img[1].v atol=0.001
+    end
+
+    @testset "HSL" begin
+        srand(42)
+        img = rand(HSL{Float32}, 8, 10)
+        out_name = joinpath(mydir, "hsl.png")
+        save(out_name, img)
+        oimg = load(out_name)
+        @test HSL.(oimg)[1].h ≈ img[1].h atol=0.9
+        @test HSL.(oimg)[1].s ≈ img[1].s atol=0.01
+        @test HSL.(oimg)[1].l ≈ img[1].l atol=0.001
+    end
+
+    @testset "Lab" begin
+        srand(42)
+        img = rand(Lab{Float32}, 8, 10)
+        out_name = joinpath(mydir, "Lab.png")
+        save(out_name, img)
+        oimg = load(out_name)
+        @test Lab.(oimg)[1].l ≈ img[1].l atol=0.9
+        @test Lab.(oimg)[1].a ≈ img[1].a atol=0.4
+        @test Lab.(oimg)[1].b ≈ img[1].b atol=0.6
+    end
 end
 
 @testset "Streams" begin

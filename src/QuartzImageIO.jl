@@ -246,7 +246,7 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray;
         bitmap_info |= kCGImageAlphaPremultipliedLast
         colorspace = CGColorSpaceCreateWithName("kCGColorSpaceGenericGray")
         components = 2
-    elseif T <: Union{RGB, RGB4}
+    elseif T <: Union{RGB, RGB4, HSV, HSL, Lab}
         bitmap_info |= kCGImageAlphaNoneSkipLast
         colorspace = CGColorSpaceCreateWithName("kCGColorSpaceSRGB")
         components = 4
