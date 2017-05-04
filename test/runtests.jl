@@ -82,12 +82,12 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == GrayA{N0f8}
         @test size(img) == (512, 512)
-        out_name = joinpath(mydir, name * ".png")
-#        save(out_name, img)
-#        oimg = load(out_name)
-#        @test size(oimg) == size(img)
-#        @test eltype(oimg) == eltype(img)
-#        @test oimg == img
+        out_name = joinpath(mydir, name * ".tif")
+        save(out_name, img)
+        oimg = load(out_name)
+        @test size(oimg) == size(img)
+        @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "Jetplane" begin
         name = "jetplane"
@@ -95,12 +95,12 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == GrayA{N0f8}
         @test size(img) == (512, 512)
-        out_name = joinpath(mydir, name * ".png")
-#        save(out_name, img)
-#        oimg = load(out_name)
-#        @test size(oimg) == size(img)
-#        @test eltype(oimg) == eltype(img)
-#        @test oimg == img
+        out_name = joinpath(mydir, name * ".tif")
+        save(out_name, img)
+        oimg = load(out_name)
+        @test size(oimg) == size(img)
+        @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "Lighthouse" begin
         name = "lighthouse"
@@ -121,13 +121,12 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == RGB{N0f8}
         @test size(img) == (512, 512)
-        out_name = joinpath(mydir, name * ".png")
+        out_name = joinpath(mydir, name * ".tiff")
         save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
-        # RGB4 vs. RGB problem
-#        @test_skip eltype(oimg) == eltype(img)
-#        @test oimg == img
+        @test eltype(oimg) == eltype(img)
+        @test oimg == img
     end
     @testset "Moonsurface" begin
         name = "moonsurface"
@@ -135,7 +134,7 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == Gray{N0f8}
         @test size(img) == (256, 256)
-        out_name = joinpath(mydir, name * ".png")
+        out_name = joinpath(mydir, name * ".tif")
         save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
@@ -163,7 +162,7 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
         @test size(img) == (226, 186, 27)
-        out_name = joinpath(mydir, name * ".png")
+        out_name = joinpath(mydir, name * ".tif")
         # This TestImage has a special case, labeling the axes.  Pop it out.
         save(out_name, img.data)
         oimg = load(out_name)
@@ -177,7 +176,7 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == Gray{N0f16}
         @test size(img) == (510, 320)
-        out_name = joinpath(mydir, name * ".png")
+        out_name = joinpath(mydir, name * ".tif")
         save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
@@ -190,7 +189,7 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == RGB{N0f16}
         @test size(img) == (512, 672)
-        out_name = joinpath(mydir, name * ".png")
+        out_name = joinpath(mydir, name * ".tif")
         save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
@@ -203,6 +202,7 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 2
         @test eltype(img) == RGB4{N0f8}
         @test size(img) == (254, 256)
+        # Unclear why this needs to be a .png
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
@@ -214,7 +214,7 @@ ispath(mydir) || mkdir(mydir)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
         @test size(img) == (167, 439, 21)
-        out_name = joinpath(mydir, name * ".png")
+        out_name = joinpath(mydir, name * ".tif")
         save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
