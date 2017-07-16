@@ -237,15 +237,11 @@ function save_{R <: DataFormat}(f::File{R}, img::AbstractArray;
     # Color type and order
     T = eltype(img)
     bitmap_info = zero(UInt32)
-    if T <: Gray
+    if T <: Union{Gray, GrayA}
+        # Note: GrayA is not an Apple supported combination, so we map to Gray
         bitmap_info |= kCGImageAlphaNone
         colorspace = CGColorSpaceCreateWithName("kCGColorSpaceGenericGray")
         components = 1
-    elseif T <: GrayA
-        # Not sure if this one actually works.  This is not an Apple supported combination
-        bitmap_info |= kCGImageAlphaPremultipliedLast
-        colorspace = CGColorSpaceCreateWithName("kCGColorSpaceGenericGray")
-        components = 2
     elseif T <: Union{RGB, RGB4, HSV, HSL, Lab}
         bitmap_info |= kCGImageAlphaNoneSkipLast
         colorspace = CGColorSpaceCreateWithName("kCGColorSpaceSRGB")
@@ -346,9 +342,9 @@ mapCG(c::Color1) = mapCG(convert(Gray, c))
 mapCG{T}(c::Gray{T}) = convert(Gray{N0f8}, c)
 mapCG{T<:Normed}(c::Gray{T}) = c
 
-mapCG(c::Color2) = mapCG(convert(GrayA, c))
-mapCG{T}(c::GrayA{T}) = convert(GrayA{N0f8}, c)
-mapCG{T<:Normed}(c::GrayA{T}) = c
+mapCG(c::Color2) = mapCG(convert(Gray, c))
+mapCG{T}(c::GrayA{T}) = convert(Gray{N0f8}, c)
+mapCG{T<:Normed}(c::GrayA{T}) = convert(Gray, c)
 
 # Note: macOS does not handle 3 channel buffers, only 4,
 # but we can tell it to use or skip that 4th (alpha) channel

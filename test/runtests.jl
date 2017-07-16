@@ -77,6 +77,8 @@ ispath(mydir) || mkdir(mydir)
         @test oimg == img
     end
     @testset "House" begin
+        # Note: this is a GrayA image, not supported by Apple
+        # So saving as a Gray for now.
         name = "house"
         img = testimage(name)
         @test ndims(img) == 2
@@ -86,10 +88,12 @@ ispath(mydir) || mkdir(mydir)
         save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
-        @test eltype(oimg) == eltype(img)
-        @test oimg == img
+        @test eltype(oimg) == Gray{N0f8}
+        @test oimg == Gray.(img)
     end
     @testset "Jetplane" begin
+        # Note: this is a GrayA image, not supported by Apple
+        # So saving as a Gray for now.
         name = "jetplane"
         img = testimage(name)
         @test ndims(img) == 2
@@ -99,8 +103,8 @@ ispath(mydir) || mkdir(mydir)
         save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
-        @test eltype(oimg) == eltype(img)
-        @test oimg == img
+        @test eltype(oimg) == Gray{N0f8}
+        @test oimg == Gray.(img)
     end
     @testset "Lighthouse" begin
         name = "lighthouse"
