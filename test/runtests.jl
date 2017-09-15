@@ -271,18 +271,17 @@ end
     @testset "Lab" begin
         srand(42)
         img = rand(Lab{Float32}, 8, 10)
-
-        # round-trip the image through RGB to ensure we have Lab values
-        # which can actually be represented in RGB space
-        img .= Lab.(RGB.(img))
-
         out_name = joinpath(mydir, "Lab.png")
         save(out_name, img)
         oimg = Lab.(load(out_name))
         for I in eachindex(img)
-            @test oimg[I].l ≈ img[I].l atol=0.9
-            @test oimg[I].a ≈ img[I].a atol=0.4
-            @test oimg[I].b ≈ img[I].b atol=0.6
+            # Comparing oimg[I] against img[I] may fail because
+            # information was lost when saving the Lab values as 
+            # RGB. Instead, we just verify that oimg[I] = Lab(RGB(img[I]))
+            expected = Lab(RGB(img[I]))
+            @test oimg[I].l ≈ expected.l atol=0.9
+            @test oimg[I].a ≈ expected.a atol=0.4
+            @test oimg[I].b ≈ expected.b atol=0.6
         end
     end
 end
