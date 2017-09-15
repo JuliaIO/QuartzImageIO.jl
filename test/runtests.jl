@@ -271,12 +271,19 @@ end
     @testset "Lab" begin
         srand(42)
         img = rand(Lab{Float32}, 8, 10)
+
+        # round-trip the image through RGB to ensure we have Lab values
+        # which can actually be represented in RGB space
+        img .= Lab.(RGB.(img))
+
         out_name = joinpath(mydir, "Lab.png")
         save(out_name, img)
-        oimg = load(out_name)
-        @test Lab.(oimg)[1].l ≈ img[1].l atol=0.9
-        @test Lab.(oimg)[1].a ≈ img[1].a atol=0.4
-        @test Lab.(oimg)[1].b ≈ img[1].b atol=0.6
+        oimg = Lab.(load(out_name))
+        for I in eachindex(img)
+            @test oimg[I].l ≈ img[I].l atol=0.9
+            @test oimg[I].a ≈ img[I].a atol=0.4
+            @test oimg[I].b ≈ img[I].b atol=0.6
+        end
     end
 end
 
