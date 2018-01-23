@@ -213,8 +213,12 @@ ispath(mydir) || mkdir(mydir)
         @test oimg == img
     end
     @testset "Multichannel timeseries OME" begin
-        name = "multi-channel-time-series.ome"
-        img = testimage(name)
+        # Note: the existence of OMETIFF.jl breaks this test,
+        # even though we don't explicitly import it here.
+        # So, we need to do some extra work to call the image
+        # with our specific loader here.
+        name = joinpath(TestImages.imagedir, "multi-channel-time-series.ome.tif")
+        img = load(FileIO.File(FileIO.format"TIFF", name))
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
         @test size(img) == (167, 439, 21)
