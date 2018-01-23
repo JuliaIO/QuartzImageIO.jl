@@ -273,10 +273,16 @@ end
         img = rand(Lab{Float32}, 8, 10)
         out_name = joinpath(mydir, "Lab.png")
         save(out_name, img)
-        oimg = load(out_name)
-        @test Lab.(oimg)[1].l ≈ img[1].l atol=0.9
-        @test Lab.(oimg)[1].a ≈ img[1].a atol=0.4
-        @test Lab.(oimg)[1].b ≈ img[1].b atol=0.6
+        oimg = Lab.(load(out_name))
+        for I in eachindex(img)
+            # Comparing oimg[I] against img[I] may fail because
+            # information was lost when saving the Lab values as 
+            # RGB. Instead, we just verify that oimg[I] = Lab(RGB(img[I]))
+            expected = Lab(RGB(img[I]))
+            @test oimg[I].l ≈ expected.l atol=0.9
+            @test oimg[I].a ≈ expected.a atol=0.4
+            @test oimg[I].b ≈ expected.b atol=0.6
+        end
     end
 end
 
