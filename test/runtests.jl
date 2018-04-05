@@ -217,7 +217,9 @@ ispath(mydir) || mkdir(mydir)
         # even though we don't explicitly import it here.
         # So, we need to do some extra work to call the image
         # with our specific loader here.
-        name = joinpath(TestImages.imagedir, "multi-channel-time-series.ome.tif")
+        mcifile = "multi-channel-time-series.ome.tif"
+        trigger_download = testimage(mcifile)
+        name = joinpath(TestImages.imagedir, mcifile)
         img = load(FileIO.File(FileIO.format"TIFF", name))
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
