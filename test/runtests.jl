@@ -1,6 +1,6 @@
-using Base.Test, FileIO, QuartzImageIO, ColorTypes
+using Test, Random, FileIO, QuartzImageIO, ColorTypes
 using FixedPointNumbers, TestImages, ImageAxes
-using Images  # For ImageMeta
+using ImageMetadata
 using OffsetArrays
 
 # Saving notes:
@@ -218,9 +218,9 @@ ispath(mydir) || mkdir(mydir)
         # So, we need to do some extra work to call the image
         # with our specific loader here.
         mcifile = "multi-channel-time-series.ome.tif"
-        trigger_download = testimage(mcifile)
+        ## TODO: trigger_download = testimage(mcifile)
         name = joinpath(TestImages.imagedir, mcifile)
-        img = load(FileIO.File(FileIO.format"TIFF", name))
+        img = QuartzImageIO.load(name)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
         @test size(img) == (167, 439, 21)
@@ -258,9 +258,9 @@ end
         out_name = joinpath(mydir, "hsv.png")
         save(out_name, img)
         oimg = load(out_name)
-        @test HSV.(oimg)[1].h ≈ img[1].h atol=0.07
-        @test HSV.(oimg)[1].s ≈ img[1].s atol=0.001
-        @test HSV.(oimg)[1].v ≈ img[1].v atol=0.001
+        @test HSV.(oimg)[1].h ≈ img[1].h rtol=0.02 atol=0.003
+        @test HSV.(oimg)[1].s ≈ img[1].s rtol=0.02 atol=0.003
+        @test HSV.(oimg)[1].v ≈ img[1].v rtol=0.02 atol=0.003
     end
 
     @testset "HSL" begin
@@ -269,9 +269,9 @@ end
         out_name = joinpath(mydir, "hsl.png")
         save(out_name, img)
         oimg = load(out_name)
-        @test HSL.(oimg)[1].h ≈ img[1].h atol=0.9
-        @test HSL.(oimg)[1].s ≈ img[1].s atol=0.01
-        @test HSL.(oimg)[1].l ≈ img[1].l atol=0.001
+        @test HSL.(oimg)[1].h ≈ img[1].h rtol=0.04 atol=0.003
+        @test HSL.(oimg)[1].s ≈ img[1].s rtol=0.02 atol=0.005
+        @test HSL.(oimg)[1].l ≈ img[1].l rtol=0.02 atol=0.003
     end
 
     @testset "Lab" begin
@@ -282,12 +282,12 @@ end
         oimg = Lab.(load(out_name))
         for I in eachindex(img)
             # Comparing oimg[I] against img[I] may fail because
-            # information was lost when saving the Lab values as 
+            # information was lost when saving the Lab values as
             # RGB. Instead, we just verify that oimg[I] = Lab(RGB(img[I]))
             expected = Lab(RGB(img[I]))
-            @test oimg[I].l ≈ expected.l atol=0.9
-            @test oimg[I].a ≈ expected.a atol=0.4
-            @test oimg[I].b ≈ expected.b atol=0.6
+            @test oimg[I].l ≈ expected.l rtol=0.07
+            @test oimg[I].a ≈ expected.a rtol=0.07 atol=0.35
+            @test oimg[I].b ≈ expected.b rtol=0.07 atol=0.35
         end
     end
 end
@@ -321,4 +321,4 @@ end
 
 rm(mydir, recursive=true)
 
-@test !isdefined(:ImageMagick)
+@test !@isdefined ImageMagick
