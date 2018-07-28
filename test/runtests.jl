@@ -218,8 +218,11 @@ ispath(mydir) || mkdir(mydir)
         # So, we need to do some extra work to call the image
         # with our specific loader here.
         mcifile = "multi-channel-time-series.ome.tif"
-        ## TODO: trigger_download = testimage(mcifile)
         name = joinpath(TestImages.imagedir, mcifile)
+        if !isfile(name)
+            REPO_URL = "https://github.com/JuliaImages/TestImages.jl/blob/gh-pages/images/"
+            download(REPO_URL*mcifile*"?raw=true", name)
+        end
         img = QuartzImageIO.load(name)
         @test ndims(img) == 3
         @test eltype(img) == Gray{N0f8}
