@@ -17,8 +17,6 @@ notifications:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.clone(pwd())'
-#  - julia -e 'Pkg.checkout("Images")'
-  - julia -e 'Pkg.status()'
   - CGBITMAP_CONTEXT_LOG_ERRORS=1 julia -e 'Pkg.test("QuartzImageIO"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("QuartzImageIO")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
