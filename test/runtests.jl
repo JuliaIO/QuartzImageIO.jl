@@ -256,7 +256,7 @@ end
 
     @testset "HSV" begin
         # issue 37
-        srand(42)
+        Random.seed!(42)
         img = rand(HSV{Float32}, 8, 10)
         out_name = joinpath(mydir, "hsv.png")
         save(out_name, img)
@@ -267,7 +267,7 @@ end
     end
 
     @testset "HSL" begin
-        srand(42)
+        Random.seed!(42)
         img = rand(HSL{Float32}, 8, 10)
         out_name = joinpath(mydir, "hsl.png")
         save(out_name, img)
@@ -278,7 +278,7 @@ end
     end
 
     @testset "Lab" begin
-        srand(42)
+        Random.seed!(42)
         img = rand(Lab{Float32}, 8, 10)
         out_name = joinpath(mydir, "Lab.png")
         save(out_name, img)
