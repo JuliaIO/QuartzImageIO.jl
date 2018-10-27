@@ -45,14 +45,14 @@ end
 ## core, internal function
 function read_and_release_imgsrc(imgsrc)
     if imgsrc == C_NULL
-        warn("QuartzImageIO created no image source")
+        @warn "QuartzImageIO created no image source"
         return nothing
     end
     # Get image information
     imframes = convert(Int, CGImageSourceGetCount(imgsrc))
     if imframes == 0
         # Bail out to ImageMagick
-        warn("QuartzImageIO found no frames")
+        @warn "QuartzImageIO found no frames"
         CFRelease(imgsrc)
         return nothing
     end
@@ -62,7 +62,7 @@ function read_and_release_imgsrc(imgsrc)
     isindexed = CFBooleanGetValue(CFDictionaryGetValue(dict, "IsIndexed"))
     if isindexed
         # Bail out to ImageMagick
-        warn("QuartzImageIO: indexed color images not implemented")
+        @warn "QuartzImageIO: indexed color images not implemented"
         CFRelease(imgsrc)
         return nothing
     end
@@ -73,7 +73,7 @@ function read_and_release_imgsrc(imgsrc)
     colormodel = CFStringGetCString(CFDictionaryGetValue(dict, "ColorModel"))
     if colormodel == ""
         # Bail out to ImageMagick
-        warn("QuartzImageIO found empty colormodel string")
+        @warn "QuartzImageIO found empty colormodel string"
         CFRelease(imgsrc)
         return nothing
     end
@@ -119,7 +119,7 @@ function read_and_release_imgsrc(imgsrc)
         buf = alphacode == 5 ? Array{RGB4{T}}(undef, sz) : Array{RGB1{T}}(undef, sz)
         fillcolor!(reshape(reinterpret(T, buf), (4, sz...)), imgsrc, storagedepth)
     else
-        warn("Unknown colormodel ($colormodel) and alphacode ($alphacode) found by QuartzImageIO")
+        @warn "Unknown colormodel ($colormodel) and alphacode ($alphacode) found by QuartzImageIO"
         CFRelease(imgsrc)
         return nothing
     end
@@ -225,9 +225,9 @@ function save_(f::File{R}, img::AbstractArray;
     try
         imgm = map(x -> mapCG(mapi(x)), img)
     catch
-        warn("""QuartzImageIO: Mapping to the storage type failed.
+        @warn """QuartzImageIO: Mapping to the storage type failed.
                 Perhaps your data had out-of-range values?
-                Try `map(clamp01nan, img)` to clamp values to a valid range.""")
+                Try `map(clamp01nan, img)` to clamp values to a valid range."""
         rethrow()
     end
     permute_horizontal && (imgm = permutedims_horizontal(imgm))
