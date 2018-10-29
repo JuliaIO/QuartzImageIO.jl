@@ -718,4 +718,17 @@ function CGBitmapContextCreateImage(context_ref::CGContextRef)
 end
 
 
+function __init__()
+    if !Sys.isapple()
+        # change this to an error in future
+        @warn("""
+              QuartzImageIO.jl can only be used on Apple macOS. Suggested usage is
+                  @static if Sys.isapple()
+                      using QuartzImageIO
+                      # QuartzImageIO specific code goes here
+                  end
+              """)
+    end
+end
+
 end # Module
