@@ -1,4 +1,3 @@
-__precompile__(true)
 module QuartzImageIO
 
 using ImageCore, ColorTypes, ColorVectorSpace, FixedPointNumbers, Libdl
