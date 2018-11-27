@@ -147,7 +147,7 @@ function fillgray!(buffer::AbstractArray{T, 2}, imgsrc) where T
     imagepixels = CopyImagePixels(CGimg)
     pixelptr = CFDataGetBytePtr(imagepixels, eltype(buffer))
     imbuffer = unsafe_wrap(Array, pixelptr, (imwidth, imheight), own=false)
-    buffer[:, :] = imbuffer
+    buffer[:, :] .= imbuffer
     CFRelease(imagepixels)
     CGImageRelease(CGimg)
 end
@@ -160,7 +160,7 @@ function fillgray!(buffer::AbstractArray{T, 3}, imgsrc) where T
         imagepixels = CopyImagePixels(CGimg)
         pixelptr = CFDataGetBytePtr(imagepixels, T)
         imbuffer = unsafe_wrap(Array, pixelptr, (imwidth, imheight), own=false)
-        buffer[:, :, i] = imbuffer
+        buffer[:, :, i] .= imbuffer
         CFRelease(imagepixels)
         CGImageRelease(CGimg)
     end
@@ -172,7 +172,7 @@ function fillgrayalpha!(buffer::AbstractArray{UInt8, 3}, imgsrc)
     imagepixels = CopyImagePixels(CGimg)
     pixelptr = CFDataGetBytePtr(imagepixels, UInt16)
     imbuffer = unsafe_wrap(Array, pixelptr, (imwidth, imheight), own=false)
-    buffer[1, :, :] = imbuffer .& 0xff
+    buffer[1, :, :] .= imbuffer .& 0xff
     buffer[2, :, :] = div.(imbuffer .& 0xff00, 256)
     CFRelease(imagepixels)
     CGImageRelease(CGimg)
@@ -186,7 +186,7 @@ function fillcolor!(buffer::AbstractArray{T, 3}, imgsrc, nc) where T
     imagepixels = CopyImagePixels(CGimg)
     pixelptr = CFDataGetBytePtr(imagepixels, T)
     imbuffer = unsafe_wrap(Array, pixelptr, (nc, imwidth, imheight), own=false)
-    buffer[:, :, :] = imbuffer
+    buffer[:, :, :] .= imbuffer
     CFRelease(imagepixels)
     CGImageRelease(CGimg)
 end
@@ -198,7 +198,7 @@ function fillcolor!(buffer::AbstractArray{T, 4}, imgsrc, nc) where T
         imagepixels = CopyImagePixels(CGimg)
         pixelptr = CFDataGetBytePtr(imagepixels, T)
         imbuffer = unsafe_wrap(Array, pixelptr, (nc, imwidth, imheight), own=false)
-        buffer[:, :, :, i] = imbuffer
+        buffer[:, :, :, i] .= imbuffer
         CFRelease(imagepixels)
         CGImageRelease(CGimg)
     end
