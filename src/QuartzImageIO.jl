@@ -173,7 +173,7 @@ function fillgrayalpha!(buffer::AbstractArray{UInt8, 3}, imgsrc)
     pixelptr = CFDataGetBytePtr(imagepixels, UInt16)
     imbuffer = unsafe_wrap(Array, pixelptr, (imwidth, imheight), own=false)
     buffer[1, :, :] .= imbuffer .& 0xff
-    buffer[2, :, :] = div.(imbuffer .& 0xff00, 256)
+    buffer[2, :, :] .= div.(imbuffer .& 0xff00, 256)
     CFRelease(imagepixels)
     CGImageRelease(CGimg)
 end
