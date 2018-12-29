@@ -11,5 +11,10 @@ matrix:
     - julia: nightly
 notifications:
   email: false
+
+script:
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia --color=yes -e 'using InteractiveUtils; versioninfo(); import Pkg; Pkg.clone(pwd())'
+  - CGBITMAP_CONTEXT_LOG_ERRORS=1 julia --color=yes --check-bounds=yes -e 'import Pkg; Pkg.test("QuartzImageIO"; coverage=true)'
 after_success:
-  - julia -e 'cd(Pkg.dir("QuartzImageIO")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'import Pkg; cd(Pkg.dir("QuartzImageIO")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
