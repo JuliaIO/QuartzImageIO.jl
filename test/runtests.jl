@@ -54,7 +54,7 @@ ispath(mydir) || mkdir(mydir)
         name = "earth_apollo17"
         img = testimage(name)
         @test ndims(img) == 2
-        @test eltype(img) == RGB4{N0f8}
+        @test eltype(img) == RGBX{N0f8}
         @test size(img) == (3002, 3000)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
@@ -67,7 +67,7 @@ ispath(mydir) || mkdir(mydir)
         name = "fabio"
         img = testimage(name)
         @test ndims(img) == 2
-        @test eltype(img) == RGB4{N0f8}
+        @test eltype(img) == RGBX{N0f8}
         @test size(img) == (256, 256)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
@@ -110,7 +110,7 @@ ispath(mydir) || mkdir(mydir)
         name = "lighthouse"
         img = testimage(name)
         @test ndims(img) == 2
-        @test eltype(img) == RGB4{N0f8}
+        @test eltype(img) == RGBX{N0f8}
         @test size(img) == (512, 768)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
@@ -149,7 +149,7 @@ ispath(mydir) || mkdir(mydir)
         name = "mountainstream"
         img = testimage(name)
         @test ndims(img) == 2
-        @test eltype(img) == RGB4{N0f8}
+        @test eltype(img) == RGBX{N0f8}
         @test size(img) == (512, 768)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
@@ -204,7 +204,7 @@ ispath(mydir) || mkdir(mydir)
         name = "blobs"
         img = testimage(name)
         @test ndims(img) == 2
-        @test eltype(img) == RGB4{N0f8}
+        @test eltype(img) == RGBX{N0f8}
         @test size(img) == (254, 256)
         # Unclear why this needs to be a .png
         out_name = joinpath(mydir, name * ".png")

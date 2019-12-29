@@ -115,7 +115,7 @@ function read_and_release_imgsrc(imgsrc)
         buf = Array{RGB{T}}(undef, sz)
         fillcolor!(reshape(reinterpret(T, buf), (3, sz...)), imgsrc, storagedepth)
     elseif colormodel == "RGB" && alphacode ∈ [5, 6]
-        buf = alphacode == 5 ? Array{RGB4{T}}(undef, sz) : Array{RGB1{T}}(undef, sz)
+        buf = alphacode == 5 ? Array{RGBX{T}}(undef, sz) : Array{XRGB{T}}(undef, sz)
         fillcolor!(reshape(reinterpret(T, buf), (4, sz...)), imgsrc, storagedepth)
     else
         @warn "Unknown colormodel ($colormodel) and alphacode ($alphacode) found by QuartzImageIO"
@@ -241,7 +241,7 @@ function save_(f::File{R}, img::AbstractArray;
         bitmap_info |= kCGImageAlphaNone
         colorspace = CGColorSpaceCreateWithName("kCGColorSpaceGenericGray")
         components = 1
-    elseif T <: Union{RGB, RGB4, HSV, HSL, Lab}
+    elseif T <: Union{RGB, RGBX, HSV, HSL, Lab}
         bitmap_info |= kCGImageAlphaNoneSkipLast
         colorspace = CGColorSpaceCreateWithName("kCGColorSpaceSRGB")
         components = 4
@@ -350,7 +350,7 @@ mapCG(c::GrayA{T}) where T <: Normed = convert(Gray, c)
 mapCG(c::Color3) = mapCG(convert(RGBA, c))
 mapCG(c::RGB{T}) where T = convert(RGBA{N0f8}, c)
 mapCG(c::RGB{T}) where T <: Normed = convert(RGBA{T}, c)
-mapCG(c::RGB4{T}) where T <: Real = convert(RGBA{T}, c)
+mapCG(c::RGBX{T}) where T <: Real = convert(RGBA{T}, c)
 
 mapCG(c::Color4) = mapCG(convert(RGBA, c))
 mapCG(c::RGBA{T}) where T = convert(RGBA{N0f8}, c)
