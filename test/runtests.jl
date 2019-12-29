@@ -218,10 +218,14 @@ ispath(mydir) || mkdir(mydir)
         # So, we need to do some extra work to call the image
         # with our specific loader here.
         mcifile = "multi-channel-time-series.ome.tif"
-        name = joinpath(TestImages.imagedir, mcifile)
-        if !isfile(name)
-            REPO_URL = "https://github.com/JuliaImages/TestImages.jl/blob/gh-pages/images/"
-            download(REPO_URL*mcifile*"?raw=true", name)
+        if !isdefined(TestImages, :image_path)
+            name = joinpath(TestImages.imagedir, mcifile)
+            if !isfile(name)
+                REPO_URL = "https://github.com/JuliaImages/TestImages.jl/blob/gh-pages/images/"
+                download(REPO_URL*mcifile*"?raw=true", name)
+            end
+        else
+            name = TestImages.image_path(TestImages.full_imagename(mcifile))
         end
         img = QuartzImageIO.load(name)
         @test ndims(img) == 3
