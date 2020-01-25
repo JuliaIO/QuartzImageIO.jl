@@ -1,10 +1,10 @@
 # QuartzImageIO
 
 [![Build Status](https://travis-ci.org/JuliaIO/QuartzImageIO.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/QuartzImageIO.jl)
-[![codecov.io](http://codecov.io/github/JuliaIO/QuartzImageIO.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaIO/QuartzImageIO.jl?branch=master)
+[![codecov](https://codecov.io/gh/JuliaIO/QuartzImageIO.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaIO/QuartzImageIO.jl)
 
 This package provides support for loading and saving images using
-native libraries on OSX.  This package was split off from
+native libraries on macOS.  This package was split off from
 [Images.jl](https://github.com/timholy/Images.jl) to make image I/O
 more modular.
 
