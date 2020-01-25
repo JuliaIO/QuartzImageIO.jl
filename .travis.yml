@@ -11,9 +11,7 @@ matrix:
     - julia: nightly
 notifications:
   email: false
+codecov: true
 
 env:
   - CGBITMAP_CONTEXT_LOG_ERRORS=1
-
-after_success:
-  - julia -e 'import Pkg; cd(Pkg.dir("QuartzImageIO")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
