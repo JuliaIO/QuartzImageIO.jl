@@ -1,6 +1,7 @@
 module QuartzImageIO
 
-using ImageCore, ColorTypes, ColorVectorSpace, FixedPointNumbers, Libdl
+# ColorTypes and FixedPointNumbers are reexported by ImageCore v0.8.1
+using ImageCore, ColorVectorSpace, Libdl
 import FileIO: DataFormat, @format_str, File, Stream, filename, stream
 
 const CFURLRef = Ptr{Cvoid}

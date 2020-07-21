@@ -3,20 +3,16 @@ uuid = "dca85d43-d64c-5e67-8c65-017450d5d020"
 version = "0.7.1"
 
 [deps]
-ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 ColorVectorSpace = "c3611d14-8923-5661-9e6a-0046d554d3a4"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-FixedPointNumbers = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [compat]
-ColorTypes = "0.9, 0.10"
 ColorVectorSpace = "0.8"
 FileIO = "1"
-FixedPointNumbers = "0.6.1, 0.7"
 ImageAxes = "0.6"
-ImageCore = "0.7, 0.8"
+ImageCore = "0.8.1"
 ImageMetadata = "0.5, 0.6, 0.7, 0.8"
 TestImages = "0.4, 0.5, 0.6, 1"
 julia = "1"
