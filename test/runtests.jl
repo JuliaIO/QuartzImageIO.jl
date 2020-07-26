@@ -1,5 +1,6 @@
-using Test, Random, FileIO, QuartzImageIO, ColorTypes
-using FixedPointNumbers, TestImages, ImageAxes
+using Test, Random, FileIO, QuartzImageIO
+using ImageCore
+using TestImages, ImageAxes
 using ImageMetadata
 using OffsetArrays
 
