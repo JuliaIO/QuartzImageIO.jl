@@ -1,6 +1,6 @@
 name = "QuartzImageIO"
 uuid = "dca85d43-d64c-5e67-8c65-017450d5d020"
-version = "0.7.2"
+version = "0.7.3"
 
 [deps]
 ColorVectorSpace = "c3611d14-8923-5661-9e6a-0046d554d3a4"
