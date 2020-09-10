@@ -4,6 +4,8 @@ module QuartzImageIO
 using ImageCore, ColorVectorSpace, Libdl
 import FileIO: DataFormat, @format_str, File, Stream, filename, stream
 
+const RGBX = ImageCore.RGBX # compat for ColorTypes < v0.10
+
 const CFURLRef = Ptr{Cvoid}
 const CFStringRef = Ptr{UInt8}
 const CFDictionaryRef = Ptr{Cvoid}
