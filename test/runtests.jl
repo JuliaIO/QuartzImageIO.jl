@@ -4,6 +4,8 @@ using TestImages, ImageAxes
 using ImageMetadata
 using OffsetArrays
 
+using ImageCore: RGBX # compat for ColorTypes < v0.10
+
 # Saving notes:
 # autumn_leaves and toucan fail as of November 2015. The "edges" of the
 # leaves are visibly different after a save+load cycle. Not sure if the
