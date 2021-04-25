@@ -1,6 +1,6 @@
 name = "QuartzImageIO"
 uuid = "dca85d43-d64c-5e67-8c65-017450d5d020"
-version = "0.7.3"
+version = "0.7.4"
 
 [deps]
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
