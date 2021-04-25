@@ -308,14 +308,14 @@ end
     out_name = joinpath(mydir, name * ".png")
     @testset "saving" begin
         open(out_name, "w") do io
-            QuartzImageIO.save(Stream(format"PNG", io), img)
+            QuartzImageIO.save(Stream{format"PNG"}(io), img)
         end
         imgcmp = load(out_name)
         @test imgcmp == img
     end
     @testset "loading" begin
         imgcmp = open(out_name) do io
-            QuartzImageIO.load(Stream(format"PNG", io))
+            QuartzImageIO.load(Stream{format"PNG"}(io))
         end
         @test imgcmp == img
     end
