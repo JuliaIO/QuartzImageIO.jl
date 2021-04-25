@@ -1,10 +1,15 @@
 module QuartzImageIO
 
-# ColorTypes and FixedPointNumbers are reexported by ImageCore v0.8.1
-using ImageCore, ColorVectorSpace, Libdl
+using ImageCore, Libdl
+import FileIO
 import FileIO: DataFormat, @format_str, File, Stream, filename, stream
 
-const RGBX = ImageCore.RGBX # compat for ColorTypes < v0.10
+if isdefined(FileIO, :action)
+    # FileIO >= 1.6
+    _format_file(format, filename) = FileIO.File{format}(filename)
+else
+    _format_file(format, filename) = FileIO.File(format, filename)
+end
 
 const CFURLRef = Ptr{Cvoid}
 const CFStringRef = Ptr{UInt8}
@@ -328,7 +333,7 @@ function getblob(img::AbstractArray, permute_horizontal, mapi)
     # to get the length of the CFMutableData object. So I take the inefficient
     # route of saving the image to a temporary file for now.
     temp_file = joinpath(tempdir(), "QuartzImageIO_temp.png")
-    save(File(format"PNG", temp_file), img,
+    save(_format_file(format"PNG", temp_file), img,
          permute_horizontal=permute_horizontal, mapi=mapi)
     read(open(temp_file))
 end
