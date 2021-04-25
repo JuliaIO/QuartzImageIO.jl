@@ -1,7 +1,8 @@
 # QuartzImageIO
 
-[![Build Status](https://travis-ci.org/JuliaIO/QuartzImageIO.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/QuartzImageIO.jl)
-[![codecov](https://codecov.io/gh/JuliaIO/QuartzImageIO.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaIO/QuartzImageIO.jl)
+[![CI][action-img]][action-url]
+[![PkgEval][pkgeval-img]][pkgeval-url]
+[![Code coverage][codecov-img]][codecov-url]
 
 This package provides support for loading and saving images using
 native libraries on macOS.  This package was split off from
@@ -34,5 +35,12 @@ It's worth pointing out that packages such as Images load FileIO.
 
 If QuartzImageIO does not provide the functionality you need, an
 alternative is
-[ImageMagick](https://github.com/JuliaIO/ImageMagick.jl). You can have
+[ImageMagick](https://github.com/JuliaIO/ImageMagick.jl) and [ImageIO](https://github.com/JuliaIO/ImageIO.jl). You can have
 both packages installed, and FileIO will manage their interaction.
+
+[pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/Q/QuartzImageIO.svg
+[pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
+[action-img]: https://github.com/JuliaIO/QuartzImageIO.jl/actions/workflows/ci.yml/badge.svg
+[action-url]: https://github.com/JuliaIO/QuartzImageIO.jl/actions/workflows/ci.yml
+[codecov-img]: https://codecov.io/gh/JuliaIO/QuartzImageIO.jl/branch/master/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/JuliaIO/QuartzImageIO.jl
