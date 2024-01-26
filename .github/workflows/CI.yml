@@ -19,7 +19,7 @@ jobs:
         julia-version: ['1.0', '1', 'nightly']
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: "Set up Julia"
         uses: julia-actions/setup-julia@v1
         with:
