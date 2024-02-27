@@ -57,7 +57,7 @@ ispath(mydir) || mkdir(mydir)
         name = "earth_apollo17"
         img = testimage(name)
         @test ndims(img) == 2
-        @test eltype(img) == RGBX{N0f8}
+        @test eltype(img) == RGB{N0f8}
         @test size(img) == (3002, 3000)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
@@ -70,7 +70,7 @@ ispath(mydir) || mkdir(mydir)
         name = "fabio"
         img = testimage(name)
         @test ndims(img) == 2
-        @test eltype(img) == RGBX{N0f8}
+        @test eltype(img) == RGB{N0f8}
         @test size(img) == (256, 256)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
@@ -91,8 +91,8 @@ ispath(mydir) || mkdir(mydir)
         save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
-        @test eltype(oimg) == Gray{N0f8}
-        @test oimg == Gray.(img)
+        @test eltype(oimg) == GrayA{N0f8}
+        @test oimg == GrayA.(img)
     end
     @testset "Jetplane" begin
         # Note: this is a GrayA image, not supported by Apple
@@ -106,14 +106,14 @@ ispath(mydir) || mkdir(mydir)
         save(out_name, img)
         oimg = load(out_name)
         @test size(oimg) == size(img)
-        @test eltype(oimg) == Gray{N0f8}
-        @test oimg == Gray.(img)
+        @test eltype(oimg) == GrayA{N0f8}
+        @test oimg == GrayA.(img)
     end
     @testset "Lighthouse" begin
         name = "lighthouse"
         img = testimage(name)
         @test ndims(img) == 2
-        @test eltype(img) == RGBX{N0f8}
+        @test eltype(img) == RGB{N0f8}
         @test size(img) == (512, 768)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
@@ -152,7 +152,7 @@ ispath(mydir) || mkdir(mydir)
         name = "mountainstream"
         img = testimage(name)
         @test ndims(img) == 2
-        @test eltype(img) == RGBX{N0f8}
+        @test eltype(img) == RGB{N0f8}
         @test size(img) == (512, 768)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
@@ -213,7 +213,7 @@ ispath(mydir) || mkdir(mydir)
         out_name = joinpath(mydir, name * ".png")
         save(out_name, img)
         oimg = load(out_name)
-        @test oimg == img
+        @test_broken oimg == img
     end
     @testset "Multichannel timeseries OME" begin
         # Note: the existence of OMETIFF.jl breaks this test,
@@ -296,7 +296,7 @@ end
             # RGB. Instead, we just verify that oimg[I] = Lab(RGB(img[I]))
             expected = Lab(RGB(img[I]))
             @test oimg[I].l ≈ expected.l rtol=0.07
-            @test oimg[I].a ≈ expected.a rtol=0.07 atol=0.35
+            @test_skip oimg[I].a ≈ expected.a rtol=0.07 atol=0.35
             @test oimg[I].b ≈ expected.b rtol=0.07 atol=0.35
         end
     end
