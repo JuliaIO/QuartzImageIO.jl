@@ -1,3 +1,10 @@
+# NOTE
+
+This package is not maintained and will likely be broken in the future.
+
+Most commonly used image formats are supported by [ImageIO.jl](https://github.com/JuliaIO/ImageIO.jl) now, and for others, 
+[ImageMagick.jl](https://github.com/JuliaIO/ImageMagick.jl) has good coverage.
+
 # QuartzImageIO
 
 [![CI][action-img]][action-url]
